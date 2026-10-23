@@ -1,0 +1,333 @@
+{
+ "source": "126 saham IDX, 29 Apr 2024 – 9 Okt 2026; periode awal < 11 Des 2025, periode uji sesudahnya",
+ "base_up10": {
+  "in": 47.8,
+  "oos": 44.5
+ },
+ "patterns": {
+  "BEARISH_BODY": {
+   "periods": {
+    "in": {
+     "n": 21418,
+     "up10": 48.1,
+     "x5": -0.17,
+     "x10": -0.42
+    },
+    "oos": {
+     "n": 9978,
+     "up10": 44.3,
+     "x5": -0.07,
+     "x10": -0.18
+    }
+   },
+   "verdict": "bukan_pola",
+   "direction": null
+  },
+  "BEARISH_ENGULFING": {
+   "periods": {
+    "in": {
+     "n": 515,
+     "up10": 49.1,
+     "x5": -0.23,
+     "x10": -0.23
+    },
+    "oos": {
+     "n": 258,
+     "up10": 37.6,
+     "x5": 0.59,
+     "x10": 0.71
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "turun"
+  },
+  "BEARISH_HARAMI": {
+   "periods": {
+    "in": {
+     "n": 477,
+     "up10": 51.2,
+     "x5": 0.6,
+     "x10": 1.53
+    },
+    "oos": {
+     "n": 296,
+     "up10": 44.3,
+     "x5": 0.17,
+     "x10": 1.34
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "turun"
+  },
+  "BULLISH_BODY": {
+   "periods": {
+    "in": {
+     "n": 14972,
+     "up10": 48.8,
+     "x5": 0.08,
+     "x10": 0.26
+    },
+    "oos": {
+     "n": 6676,
+     "up10": 45.2,
+     "x5": 0.08,
+     "x10": 0.32
+    }
+   },
+   "verdict": "bukan_pola",
+   "direction": null
+  },
+  "BULLISH_ENGULFING": {
+   "periods": {
+    "in": {
+     "n": 268,
+     "up10": 42.9,
+     "x5": -0.62,
+     "x10": -1.45
+    },
+    "oos": {
+     "n": 220,
+     "up10": 43.6,
+     "x5": 0.1,
+     "x10": 0.16
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "naik"
+  },
+  "BULLISH_HARAMI": {
+   "periods": {
+    "in": {
+     "n": 993,
+     "up10": 45.0,
+     "x5": -0.31,
+     "x10": -0.85
+    },
+    "oos": {
+     "n": 519,
+     "up10": 40.3,
+     "x5": -0.28,
+     "x10": -0.58
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "naik"
+  },
+  "DARK_CLOUD_COVER": {
+   "periods": {
+    "in": {
+     "n": 517,
+     "up10": 48.0,
+     "x5": 0.4,
+     "x10": 0.48
+    },
+    "oos": {
+     "n": 202,
+     "up10": 44.6,
+     "x5": -0.29,
+     "x10": -0.23
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "turun"
+  },
+  "DOJI": {
+   "periods": {
+    "in": {
+     "n": 7336,
+     "up10": 47.1,
+     "x5": -0.33,
+     "x10": -0.47
+    },
+    "oos": {
+     "n": 2911,
+     "up10": 49.2,
+     "x5": 0.06,
+     "x10": 0.19
+    }
+   },
+   "verdict": "bukan_pola",
+   "direction": null
+  },
+  "EVENING_STAR": {
+   "periods": {
+    "in": {
+     "n": 272,
+     "up10": 52.9,
+     "x5": -0.45,
+     "x10": -0.88
+    },
+    "oos": {
+     "n": 103,
+     "up10": 41.7,
+     "x5": 0.3,
+     "x10": 0.81
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "turun"
+  },
+  "HAMMER": {
+   "periods": {
+    "in": {
+     "n": 1261,
+     "up10": 43.8,
+     "x5": -0.31,
+     "x10": -0.76
+    },
+    "oos": {
+     "n": 604,
+     "up10": 39.6,
+     "x5": -0.27,
+     "x10": -0.52
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "naik"
+  },
+  "HANGING_MAN": {
+   "periods": {
+    "in": {
+     "n": 1453,
+     "up10": 44.9,
+     "x5": -0.32,
+     "x10": -1.03
+    },
+    "oos": {
+     "n": 631,
+     "up10": 44.8,
+     "x5": 0.17,
+     "x10": 0.04
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "turun"
+  },
+  "INVERTED_HAMMER": {
+   "periods": {
+    "in": {
+     "n": 1399,
+     "up10": 48.2,
+     "x5": -0.33,
+     "x10": -0.91
+    },
+    "oos": {
+     "n": 621,
+     "up10": 39.5,
+     "x5": -0.02,
+     "x10": -0.16
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "naik"
+  },
+  "LOCKED": {
+   "periods": {
+    "in": {
+     "n": 1161,
+     "up10": 43.7,
+     "x5": 5.3,
+     "x10": 11.87
+    },
+    "oos": {
+     "n": 212,
+     "up10": 21.2,
+     "x5": -1.09,
+     "x10": -3.6
+    }
+   },
+   "verdict": "bukan_pola",
+   "direction": null
+  },
+  "MORNING_STAR": {
+   "periods": {
+    "in": {
+     "n": 545,
+     "up10": 42.9,
+     "x5": -0.01,
+     "x10": -0.79
+    },
+    "oos": {
+     "n": 196,
+     "up10": 44.4,
+     "x5": 0.2,
+     "x10": -0.81
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "naik"
+  },
+  "PIERCING_LINE": {
+   "periods": {
+    "in": {
+     "n": 261,
+     "up10": 41.8,
+     "x5": -1.28,
+     "x10": -1.85
+    },
+    "oos": {
+     "n": 119,
+     "up10": 43.7,
+     "x5": -0.61,
+     "x10": -0.47
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "naik"
+  },
+  "SHOOTING_STAR": {
+   "periods": {
+    "in": {
+     "n": 1471,
+     "up10": 49.2,
+     "x5": 0.59,
+     "x10": 0.45
+    },
+    "oos": {
+     "n": 628,
+     "up10": 45.5,
+     "x5": 0.25,
+     "x10": 0.15
+    }
+   },
+   "verdict": "tidak_terbukti",
+   "direction": "turun"
+  },
+  "THREE_BLACK_CROWS": {
+   "periods": {
+    "in": {
+     "n": 380,
+     "up10": 44.2,
+     "x5": -0.41,
+     "x10": -1.1
+    },
+    "oos": {
+     "n": 176,
+     "up10": 44.3,
+     "x5": -0.52,
+     "x10": -0.31
+    }
+   },
+   "verdict": "terbukti",
+   "direction": "turun"
+  },
+  "THREE_WHITE_SOLDIERS": {
+   "periods": {
+    "in": {
+     "n": 113,
+     "up10": 46.9,
+     "x5": -0.56,
+     "x10": -1.14
+    },
+    "oos": {
+     "n": 43,
+     "up10": 48.8,
+     "x5": 5.67,
+     "x10": 0.98
+    }
+   },
+   "verdict": "data_kurang",
+   "direction": "naik"
+  }
+ }
+}

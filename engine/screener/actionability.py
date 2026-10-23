@@ -37,6 +37,9 @@ REQUIRE_NOT_VOLATILE = True
 # IDX calibrated (Rp2 M won in-sample, Rp5 M was within 0.003 R); US not calibrated (no US run)
 MIN_VALUE_IDX = 2e9
 MIN_VALUE_US = 20e6
+# Minimum reward/risk to TP1 (Rugi : Untung). 0 = no condition. Candidate 1.2 = the existing
+# "tight_room" line; under test in docs/hasil-akhir-fase1-5.md
+MIN_RR = 0.0
 # Abnormal bars that make the last prices unreliable for a fresh entry
 DATA_BLOCK_KINDS: Tuple[str, ...] = ("LOCK_DOWN", "LIMIT_DOWN", "SUSPENSION_GAP")
 # How many recent trading days an abnormal bar keeps blocking (and a LOCK_DOWN forces HINDARI)
@@ -67,6 +70,7 @@ def default_config() -> Dict[str, Any]:
         "require_not_volatile": REQUIRE_NOT_VOLATILE,
         "min_value_idx": MIN_VALUE_IDX,
         "min_value_us": MIN_VALUE_US,
+        "min_rr": MIN_RR,
         "data_block_kinds": DATA_BLOCK_KINDS,
         "data_lookback_days": DATA_LOOKBACK_DAYS,
     }
@@ -198,6 +202,15 @@ def assess(row: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> Dict
         reasons.append("Rencana harga belum tersedia")
     elif not gates["risk_ok"]:
         reasons.append(f"Risiko {_id(risk)}% > batas {_id(cfg['max_risk_pct'])}%")
+
+    # ── Room to the first target vs the risk ────────────────────────────────
+    min_rr = float(cfg.get("min_rr") or 0)
+    if min_rr > 0:
+        rr = _num(lv.get("risk_reward_ratio"))
+        gates["room_ok"] = rr is not None and rr >= min_rr
+        if not gates["room_ok"]:
+            reasons.append(f"Ruang ke TP1 sempit (Rugi : Untung 1 : {_id(rr) if rr is not None else '-'}, "
+                           f"minimal 1 : {_id(min_rr)})")
 
     # ── Volatility vs stop distance ─────────────────────────────────────────
     gates["vol_ok"] = not (cfg["require_not_volatile"] and "too_volatile" in flags)

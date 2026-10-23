@@ -65,6 +65,7 @@ const FLAG_TEXT: Record<string, string> = {
   market_entry: 'Tidak ada support dekat — entry di harga pasar',
   projected_tp1: 'TP1 proyeksi (belum ada resistance tercatat di atas)',
   too_volatile: 'Terlalu volatil — cut loss 8% masih di dalam gerak harian normal (ATR)',
+  narrow_zone: 'Zona beli sangat sempit — harga beli praktis sama dengan harga pasar',
 };
 
 const fmtDay = (d: string) => {

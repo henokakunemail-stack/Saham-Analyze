@@ -12,9 +12,9 @@ held 5 trading days (docs/hasil-akhir-fase1-5.md, "Peringkat").
 from typing import Any, Dict, List, Optional
 
 # Share of plans whose buy limit filled within 5 trading days, by how far the close stood above the
-# buy zone (in ATR). Both periods agree within a few points: ≤0.25 76.6/80.3 %, 0.25–0.5 60.0/61.8 %,
-# 0.5–1 41.9/41.1 %, 1–1.5 27.3/23.0 %; > 1.5 ATR only 16 plans (12.5 %).
-FILL_BY_DISTANCE = ((0.25, 78), (0.5, 61), (1.0, 41), (1.5, 25), (float("inf"), 15))
+# buy limit itself (in ATR). In-sample / out-of-sample: ≤0.25 82.8/84.7 %, 0.25–0.5 75.9/79.2 %,
+# 0.5–0.75 62.3/63.6 %, 0.75–1 49.8/48.8 %, 1–1.5 34.4/30.4 %, > 1.5 only 441 plans (≈ 30 %).
+FILL_BY_DISTANCE = ((0.25, 84), (0.5, 77), (0.75, 63), (1.0, 50), (1.5, 33), (float("inf"), 30))
 
 # Average outcome per status in the test period (Dec 2025 – Oct 2026), before fees.
 STATUS_HISTORY = {
@@ -42,9 +42,9 @@ def _price(v: float) -> str:
     return f"{v:,.0f}".replace(",", ".") if v >= 100 else _id(v, 2)
 
 
-def fill_chance(close: float, entry_high: float, atr: float) -> Dict[str, Any]:
-    """Backtest fill rate for a buy zone `entry_high` when the stock closed at `close`."""
-    dist = max(0.0, (close - entry_high) / atr) if atr > 0 else 0.0
+def fill_chance(close: float, buy: float, atr: float) -> Dict[str, Any]:
+    """Backtest fill rate for a buy limit `buy` when the stock closed at `close`."""
+    dist = max(0.0, (close - buy) / atr) if atr > 0 else 0.0
     pct = next(p for limit, p in FILL_BY_DISTANCE if dist <= limit)
     return {"dist_atr": round(dist, 2), "fill_pct": pct}
 
@@ -73,7 +73,7 @@ def assess(levels: Dict[str, Any], action: Optional[Dict[str, Any]] = None,
 
     points: List[str] = []
     caution: Optional[str] = None   # the one warning shown without expanding the row
-    fc = fill_chance(close, eh, atr)
+    fc = fill_chance(close, buy, atr)
     below = (1 - buy / close) * 100
     if close <= eh:
         points.append(f"Penutupan sudah di zona beli — peluang order limit {_price(buy)} terisi dalam 5 hari bursa "

@@ -29,8 +29,9 @@ yang jujur per saham — bukan memantau harga menit-ke-menit.
 1. **Hasil sesi terakhir vs rencana yang berlaku** (rekap: TP1 tercapai tanpa terisi / harga beli terisi / kena cut loss / tidak turun ke zona).
 2. **Rencana untuk sesi berikutnya** dari penutupan final: harga beli (limit), cut loss, TP1, status.
 3. **Penilaian jujur**, dihitung dari data uji historis, bukan kata-kata manis:
-   - peluang order limit terisi dalam 5 hari bursa menurut jarak harga beli dari penutupan
-     (≤ 0,25 ATR ±78 %, 0,25–0,5 ±61 %, 0,5–1 ±41 %, > 1 ATR ±25 %; dari 23.923 rencana),
+   - peluang order limit terisi dalam 5 hari bursa menurut jarak penutupan ke harga beli
+     (≤ 0,25 ATR ±84 %, 0,25–0,5 ±77 %, 0,5–0,75 ±63 %, 0,75–1 ±50 %, 1–1,5 ±33 %, > 1,5 ±30 %;
+     23.923 rencana, kedua periode berselisih ≤ 4 poin kecuali > 1,5 ATR yang sampelnya kecil),
    - ruang ke TP1 dibanding risiko (Rugi : Untung) dengan kalimat yang jelas bila ruangnya sempit,
    - peringatan gerak harian lebih lebar dari jarak cut loss,
    - status dan alasan utamanya.
@@ -127,6 +128,17 @@ Semua lewat `engine/screener/calibration.py` (pilih di periode awal, uji sekali)
    Sumber alternatif resmi (IDX) menolak akses otomatis; tidak ada sumber gratis andal lain — dicatat sebagai batasan.
 
 ---
+
+## Status (24 Okt 2026)
+
+| Bagian | Status |
+|---|---|
+| 0 Analisa Penutupan | ✅ selesai — peluang terisi dihitung dari jarak ke harga beli (tabel diperbarui) |
+| 1 Candlestick | ✅ deteksi diperbaiki, diuji: tidak ada pola yang konsisten di IDX; candle tetap di skor (mencabutnya memperburuk); setiap pola menampilkan rekam jejaknya — `docs/hasil-uji-candlestick.md` |
+| 2 Laporan keuangan | ✅ bagian "Laporan keuangan" di detail saham (mata uang laporan, bank dikecualikan dari utang, valuasi vs sektor); bendera merah tidak dipakai sebagai syarat — `docs/hasil-uji-fundamental.md`. Ditemukan & diperbaiki: PBV mustahil di 38 dari 200 saham (emiten berlaporan USD) yang membuat penilaian kesehatan keliru |
+| 3 Aturan level & syarat | ✅ zona breakout & level "bersih" ditolak; **syarat Rugi:Untung ≥ 1:1,2 menunggu keputusan pengguna** (kuat di kedua periode, sampel periode uji 37 transaksi) |
+| 4 Rekam jejak nyata | berikutnya |
+| 5 Kesehatan data Yahoo | berikutnya |
 
 ## Urutan pengerjaan
 

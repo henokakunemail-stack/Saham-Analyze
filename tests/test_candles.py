@@ -53,6 +53,13 @@ def test_three_crows_and_soldiers():
     assert detect(soldiers, atr=20)["pattern"] == "THREE_WHITE_SOLDIERS"
 
 
+def test_patterns_carry_their_idx_track_record():
+    from engine.indicators.candles import evidence
+    e = evidence("HAMMER")
+    assert e["verdict"] == "tidak_terbukti" and "tidak terbukti mendahului kenaikan" in e["text"] and e["n"] > 1000
+    assert evidence("BULLISH_BODY") is None and evidence("NOPE") is None
+
+
 def test_plain_colour_is_labelled_as_colour_only():
     out = detect(frame([(920, 931, 918, 930)], lead="down"), atr=20)
     assert out["pattern"] == "BULLISH_BODY" and "bukan pola" in out["description"]

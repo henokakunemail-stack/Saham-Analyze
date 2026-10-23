@@ -15,6 +15,7 @@ import { SignalTrackRecord } from './SignalTrackRecord';
 import { AbnormalDaysChip } from './AbnormalDaysChip';
 import { ActionStatusBadge } from './ActionStatusBadge';
 import { DecisionStrip } from './DecisionStrip';
+import { StatementsSection } from './StatementsSection';
 import { PillarBars } from './PillarBars';
 import { fmtNum, fmtPct, fmtPrice, fmtSigned } from './help/format';
 import { GATE_LABELS, getTerm } from '../lib/glossary';
@@ -615,30 +616,25 @@ export const StockDetailModal: React.FC<Props> = ({
                       </h3>
                     </div>
                     {analysis.technical.candlestick && (
-                      <div className="flex items-center gap-1.5">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                          🕯️ {analysis.technical.candlestick.label}
-                        </span>
-                        {analysis.technical.candlestick.reliability && (
-                          <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                            analysis.technical.candlestick.reliability === 'HIGH'
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-slate-700 text-gray-300'
-                          }`}>
-                            Keandalan pola:{' '}
-                            {({ HIGH: 'tinggi', MEDIUM: 'sedang', LOW: 'rendah' } as Record<string, string>)[
-                              analysis.technical.candlestick.reliability
-                            ] ?? analysis.technical.candlestick.reliability}
-                          </span>
-                        )}
-                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-gray-200 border border-slate-700">
+                        🕯️ {analysis.technical.candlestick.label}
+                      </span>
                     )}
                   </div>
 
                   {analysis.technical.candlestick?.description && (
-                    <p className="text-xs text-gray-400 italic">
-                      "{analysis.technical.candlestick.description}"
-                    </p>
+                    <div className="text-xs space-y-0.5">
+                      <p className="text-gray-300">{analysis.technical.candlestick.description}</p>
+                      {analysis.technical.candlestick.evidence && (
+                        <p
+                          className={
+                            analysis.technical.candlestick.evidence.verdict === 'terbukti' ? 'text-sky-300' : 'text-amber-300'
+                          }
+                        >
+                          {analysis.technical.candlestick.evidence.text}
+                        </p>
+                      )}
+                    </div>
                   )}
 
                   {/* The numbers themselves are in "Keputusan hari ini" at the top; here: where they come from */}
@@ -714,6 +710,9 @@ export const StockDetailModal: React.FC<Props> = ({
               ) : (
                 analysis && <FlowSummaryCard data={analysis.flow_summary} />
               )}
+
+              {/* Financial statements: information only (does not change score or status) */}
+              {analysis && <StatementsSection ticker={ticker} market={market} />}
 
               {/* Trend Direction Engine */}
               {analysis?.direction && (

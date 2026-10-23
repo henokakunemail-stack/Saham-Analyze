@@ -111,6 +111,11 @@ def fetch(ticker: str, force: bool = False) -> Dict[str, Any]:
         tk = yf.Ticker(ticker)
         data = {"annual": extract(tk.income_stmt, tk.balance_sheet, tk.cashflow),
                 "quarterly": extract(tk.quarterly_income_stmt, tk.quarterly_balance_sheet, tk.quarterly_cashflow)}
+        try:
+            # Many IDX coal/mining companies report in USD; amounts must be labelled in that currency
+            data["currency"] = (tk.info or {}).get("financialCurrency")
+        except Exception:
+            data["currency"] = None
     except Exception as e:
         print(f"[Statements] {ticker}: {e}")
         return cached["data"] if cached else {"annual": {}, "quarterly": {}}

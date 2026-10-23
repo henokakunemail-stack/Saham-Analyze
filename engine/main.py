@@ -40,9 +40,9 @@ from .routes import market as market_routes
 from . import market_breadth, sectors
 from .screener.actionability import assess as assess_action, rank_key
 from .screener.pipeline import analyze_frame
-from .screener import session_recap, closing_review
+from .screener import session_recap, closing_review, financial_statements
 from .screener.scoring import PILLAR_WEIGHTS
-from .screener.fundamentals import fetch_and_evaluate_financials
+from .screener.fundamentals import fetch_and_evaluate_financials, MAX_SANE_PBV
 from .screener.broker_summary import fetch_and_evaluate_broker_summary, fetch_from_sectors_app
 from .ai import validation_log
 from .ai.client import test_ai_connection, validate_signal_with_ai, get_ai_config, fetch_ai_models, list_router_accounts
@@ -616,6 +616,34 @@ def resolve_stock_market(ticker: str, market: str = Query("IDX", pattern="^(IDX|
         if not fetch_stock_ohlcv(norm, period="1y").empty:
             return {"ticker": norm, "market": mk}
     raise HTTPException(status_code=404, detail=f"Kode saham {raw} tidak ditemukan di BEI maupun bursa AS.")
+
+
+@app.get("/api/stock/{ticker}/statements")
+def get_stock_statements(ticker: str, market: str = Query("IDX", pattern="^(IDX|US)$"), refresh: bool = False):
+    """Financial statements (annual + quarterly, Yahoo) read for a beginner: growth, cash quality,
+    balance sheet, red flags, and valuation against the sector median of the scanned universe.
+    Information only: none of this changes the score or the status (docs/hasil-uji-fundamental.md)."""
+    norm = normalize_ticker(ticker, market)
+    sector = sectors.sector_of(norm, market)
+    data = financial_statements.fetch(norm, force=refresh)
+    out = financial_statements.analyze(data.get("annual", {}), sector=sector, quarterly=data.get("quarterly"))
+    out.update({"ticker": norm, "sector": sector,
+                "currency": data.get("currency") or ("IDR" if market == "IDX" else "USD")})
+    # Valuation vs peers: median PER / PBV of the same sector among the scanned stocks
+    peers = [r for r in get_screener_results(market=market) if r.get("sector") == sector and r["ticker"] != norm]
+    me = next((r for r in get_screener_results(market=market) if r["ticker"] == norm), None)
+
+    def median(key: str) -> Optional[float]:
+        # PBV above MAX_SANE_PBV is a currency mix-up (USD book value, IDR price), never a valuation
+        vals = sorted(float(r[key]) for r in peers if r.get(key) and 0 < float(r[key]) <= MAX_SANE_PBV * 20
+                      and (key != "pbv" or float(r[key]) <= MAX_SANE_PBV))
+        return round(vals[len(vals) // 2], 2) if len(vals) >= 3 else None
+
+    my_pbv = (me or {}).get("pbv") or None
+    out["valuation"] = {"pe": (me or {}).get("pe") or None,
+                        "pbv": my_pbv if my_pbv and my_pbv <= MAX_SANE_PBV else None,
+                        "sector_pe": median("pe"), "sector_pbv": median("pbv"), "peers": len(peers)}
+    return out
 
 
 @app.get("/api/stock/{ticker}/analysis")

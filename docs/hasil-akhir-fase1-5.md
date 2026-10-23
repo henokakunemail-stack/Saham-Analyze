@@ -12,6 +12,27 @@ python -m engine.screener.calibration compute rows.pkl            # baris backte
 python -m engine.screener.calibration report rows.pkl report.json  # pilih di periode awal, uji sekali di periode uji
 ```
 
+## Putaran 24 Okt 2026 (rencana `docs/RENCANA_PERBAIKAN_OKT2026.md`)
+
+| Kandidat | LAYAK periode awal | LAYAK periode uji | Keputusan |
+|---|---|---|---|
+| Sekarang | 848 rencana, +0,064 R | 253, +0,116 R | — |
+| **Syarat Rugi:Untung ≥ 1 : 1,2** | **215, +0,287 R** (PF 1,60) | **53, +0,615 R** (PF 2,53) | **menunggu keputusan pengguna** — terbaik di periode awal dan dikonfirmasi periode uji, tetapi hanya 37 rencana terisi di periode uji (syarat kita ≥ 100). Tersedia sebagai `actionability.MIN_RR`, saat ini 0 (mati). |
+| Rugi:Untung ≥ 1 : 1,0 | 318, +0,207 R | 80, +0,469 R | (pembanding) |
+| Zona breakout minimum 0,25 ATR | 848, +0,067 R | 253, +0,105 R | tidak dipakai (lebih buruk di periode uji) |
+| Zona breakout minimum 0,5 ATR | 849, +0,075 R | 257, +0,074 R | tidak dipakai (lebih buruk di periode uji) |
+| ATR & pivot "bersih" | 848, +0,064 R | 254, +0,116 R | tidak dipakai (tidak berbeda) |
+| Candle dicabut dari skor | 846, +0,055 R | 246, +0,063 R | tidak dipakai — lihat `docs/hasil-uji-candlestick.md` |
+| Deteksi candle baru di skor | 844, +0,062 R | 247, +0,116 R | dipakai (setara; memperbaiki salah baca) |
+| Bendera merah laporan keuangan sebagai syarat | lihat `docs/hasil-uji-fundamental.md` | | tidak dipakai; ditampilkan sebagai informasi |
+
+Catatan penting: sebelumnya kami menyimpulkan syarat R:R "tidak didukung" — kesimpulan itu memakai simulator lama yang
+menggelembungkan hasil rencana berruang sempit. Dengan simulator yang benar, ruang untung ke TP1 adalah pemisah terkuat
+yang pernah kami temukan.
+
+Peluang order terisi (5 hari bursa) menurut jarak penutupan ke **harga beli** — dipakai di "Analisa Penutupan":
+≤ 0,25 ATR 83/85 %, 0,25–0,5 76/79 %, 0,5–0,75 62/64 %, 0,75–1 50/49 %, 1–1,5 34/30 % (periode awal/uji).
+
 ## Revisi: bug simulator dan angka yang dikoreksi
 
 Versi pertama dokumen ini melaporkan LAYAK **+0,341 R** di periode uji. Angka itu terlalu tinggi: setelah TP1 tersentuh,

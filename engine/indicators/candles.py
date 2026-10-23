@@ -11,6 +11,8 @@ Changes from the first version (docs/hasil-uji-candlestick.md):
 `reliability` is the textbook label only; whether a pattern helped on IDX is measured separately
 (engine/screener/candle_study.py) and shown next to it.
 """
+import json
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 import pandas as pd
@@ -62,6 +64,38 @@ PATTERNS: Dict[str, Dict[str, str]] = {
 }
 
 CONTEXT_BARS = 5
+_STATS_PATH = Path(__file__).resolve().parent.parent / "data" / "candle_stats.json"
+_stats: Optional[Dict[str, Any]] = None
+
+
+def _pct(v: float) -> str:
+    return f"{v:+.1f}".replace(".", ",") + "%"
+
+
+def evidence(pattern: str) -> Optional[Dict[str, Any]]:
+    """What this pattern was followed by on IDX (engine/data/candle_stats.json, from the event study):
+    10-day return vs all stocks on the same day, early and test period, and a plain verdict."""
+    global _stats
+    if _stats is None:
+        try:
+            _stats = json.loads(_STATS_PATH.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            _stats = {}
+    p = (_stats.get("patterns") or {}).get(pattern)
+    if not p or p.get("verdict") == "bukan_pola":
+        return None
+    a, b = p["periods"].get("in"), p["periods"].get("oos")
+    v = p["verdict"]
+    if v == "data_kurang" or not a or not b:
+        text = "Kejadian pola ini di IDX masih terlalu sedikit untuk dinilai."
+    else:
+        moves = f"10 hari setelahnya rata-rata {_pct(a['x10'])} (periode awal) dan {_pct(b['x10'])} (periode uji) dibanding saham lain"
+        if v == "terbukti":
+            text = f"Di IDX pola ini cenderung diikuti hasil {'lebih baik' if p['direction'] == 'naik' else 'lebih buruk'} dari rata-rata: {moves} — selisihnya kecil."
+        else:
+            text = f"Di IDX pola ini tidak terbukti mendahului {'kenaikan' if p['direction'] == 'naik' else 'penurunan'}: {moves}."
+    return {"verdict": v, "direction": p.get("direction"), "text": text,
+            "n": (a or {}).get("n", 0) + (b or {}).get("n", 0)}
 
 
 def _result(name: str) -> Dict[str, Any]:

@@ -10,7 +10,8 @@ import {
   ScanStatus,
   BrokerSummaryData,
   AiModelsResponse,
-  ClosingReview
+  ClosingReview,
+  FinancialStatements
 } from '../types/stock';
 import { API_BASE } from './base';
 import { requestJson, TIMEOUT, ApiError } from './feedback';
@@ -104,6 +105,18 @@ export const api = {
       return await requestJson<StockAnalysis>(
         `${API_BASE}/stock/${encodeURIComponent(ticker)}/analysis?market=${market}&force_refresh=${forceRefresh}`,
         { op: `analysis:${ticker}`, title: `Gagal memuat analisis ${ticker}`, timeout: TIMEOUT.slow }
+      );
+    } catch {
+      return null;
+    }
+  },
+
+  /** Financial statements read for a beginner (information only; silent, null on failure). */
+  async getStatements(ticker: string, market: 'IDX' | 'US' = 'IDX'): Promise<FinancialStatements | null> {
+    try {
+      return await requestJson<FinancialStatements>(
+        `${API_BASE}/stock/${encodeURIComponent(ticker)}/statements?market=${market}`,
+        { timeout: TIMEOUT.slow }
       );
     } catch {
       return null;

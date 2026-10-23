@@ -10,19 +10,21 @@ LV = {"price": 4800, "as_of": "2026-10-23", "recommended_entry": 4740, "entry_lo
 
 
 def test_fill_chance_follows_the_backtest_table():
-    assert cr.fill_chance(4790, 4790, 100) == {"dist_atr": 0.0, "fill_pct": 78}
-    assert cr.fill_chance(4830, 4790, 100)["fill_pct"] == 61
-    assert cr.fill_chance(4880, 4790, 100)["fill_pct"] == 41
-    assert cr.fill_chance(4920, 4790, 100)["fill_pct"] == 25
-    assert cr.fill_chance(5000, 4790, 100)["fill_pct"] == 15
+    # distance from the close to the buy limit itself, in ATR
+    assert cr.fill_chance(4740, 4740, 100) == {"dist_atr": 0.0, "fill_pct": 84}
+    assert cr.fill_chance(4780, 4740, 100)["fill_pct"] == 77
+    assert cr.fill_chance(4810, 4740, 100)["fill_pct"] == 63
+    assert cr.fill_chance(4830, 4740, 100)["fill_pct"] == 50
+    assert cr.fill_chance(4880, 4740, 100)["fill_pct"] == 33
+    assert cr.fill_chance(5000, 4740, 100)["fill_pct"] == 30
 
 
 def test_assessment_is_specific_and_honest():
     a = cr.assess(LV, {"status": "TUNGGU", "reasons": ["Pasar bearish — hanya untuk saham pemimpin tren"]})
     assert a["verdict"] == "Belum layak dibeli: Pasar bearish — hanya untuk saham pemimpin tren."
-    assert a["points"][0] == ("Harga beli 4.740 ada 1,2% di bawah penutupan (0,1× gerak harian) — peluang terisi "
-                              "dalam 5 hari bursa ±78% (uji historis).")
-    assert a["fill_pct"] == 78 and a["dist_atr"] == 0.1                       # close 0.1 ATR above the zone
+    assert a["points"][0] == ("Harga beli 4.740 ada 1,2% di bawah penutupan (0,6× gerak harian) — peluang terisi "
+                              "dalam 5 hari bursa ±63% (uji historis).")
+    assert a["fill_pct"] == 63 and a["dist_atr"] == 0.6                       # close 0.6 ATR above the buy limit
     assert "untung kecil dibanding risiko" in a["points"][1]
     layak = cr.assess({**LV, "risk_reward_ratio": 2.4, "target_tp1": 5400}, {"status": "LAYAK", "reasons": []})
     assert layak["verdict"] == "Layak dipasang order beli limit di 4.740." and "sepadan" in layak["points"][1]

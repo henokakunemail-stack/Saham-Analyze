@@ -43,6 +43,14 @@ def test_point_in_time_hides_reports_not_yet_published():
     assert "2025-12-31" in fs.as_of(a, "2026-04-15")["revenue"]
 
 
+def test_statements_endpoint(monkeypatch):
+    from fastapi.testclient import TestClient
+    from engine import main
+    monkeypatch.setattr(fs, "fetch", lambda t, force=False: {"annual": fs.extract(INCOME, BALANCE, CASH), "quarterly": {}})
+    r = TestClient(main.app).get("/api/stock/ABCD/statements?market=IDX").json()
+    assert r["ticker"] == "ABCD.JK" and r["available"] and "valuation" in r and r["flags"]
+
+
 def test_losses_and_empty_data():
     loss = frame({"Total Revenue": [100, 100, 100, 100], "Net Income": [-5, -3, 2, 4]})
     m = fs.analyze(fs.extract(loss, None, None))

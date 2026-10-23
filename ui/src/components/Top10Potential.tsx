@@ -429,16 +429,15 @@ export const Top10Potential: React.FC<Props> = ({
                           </span>
                         )}
                         {candle && typeof candle.pattern === 'string' && candle.pattern.length > 0 && (
+                          // Neutral colour: on IDX no pattern reliably preceded a move (candle_stats.json)
                           <span
-                            className={`px-2 py-0.5 rounded text-[11px] border ${
-                              candle.signal === 'BULLISH' || candle.signal === 'STRONG_BULLISH'
-                                ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                                : candle.signal === 'BEARISH'
-                                ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
-                                : 'bg-slate-800 text-slate-300 border-slate-700'
-                            }`}
+                            className="px-2 py-0.5 rounded text-[11px] border bg-slate-800 text-slate-200 border-slate-700"
+                            title={candle.evidence?.text ?? candle.description}
                           >
                             Candle: {candle.label || candle.pattern.replace(/_/g, ' ')}
+                            {candle.evidence && candle.evidence.verdict !== 'terbukti' && (
+                              <span className="text-gray-400"> · tidak terbukti di IDX</span>
+                            )}
                           </span>
                         )}
                       </div>

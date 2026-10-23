@@ -5,8 +5,11 @@ from datetime import datetime
 from ..db import get_fundamentals, save_fundamentals
 from ..collectors.market_data import normalize_ticker
 
-# Rows written before the debt-to-equity fix (×100 on values Yahoo already gives in %) are refetched
-CACHE_VALID_FROM = "2026-10-23T12:00:00"
+# Rows written before a data fix are refetched: debt-to-equity ×100 (23 Oct), PBV of companies that
+# report in USD (24 Oct: Yahoo divides an IDR price by a USD book value — BREN 454,000×, BSSR 51,470×)
+CACHE_VALID_FROM = "2026-10-24T12:00:00"
+# A price-to-book above this is a currency mix-up, not a valuation
+MAX_SANE_PBV = 50.0
 
 
 def _ttl_days(ticker: str) -> int:
@@ -78,6 +81,8 @@ def fetch_and_evaluate_financials(
         # Valuation
         pe = round(float(info.get("trailingPE") or info.get("forwardPE") or 0.0), 2)
         pbv = round(float(info.get("priceToBook") or 0.0), 2)
+        if pbv > MAX_SANE_PBV:
+            pbv = 0.0   # unknown rather than "mahal": price and book value are in different currencies
         market_cap = float(info.get("marketCap") or 0.0)
 
     except Exception as e:

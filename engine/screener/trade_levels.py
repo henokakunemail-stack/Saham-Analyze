@@ -30,6 +30,9 @@ TP_ABOVE_CLOSE = os.environ.get("SAHAM_TP_ABOVE_CLOSE", "0") == "1"
 STOP_UNDER_NEAR_ZONE = os.environ.get("SAHAM_STOP_NEAR_ZONE", "0") == "1"
 # Zones grow only while a level is within MERGE_ATR of the zone's bottom (no chaining)
 MERGE_FROM_BOTTOM = os.environ.get("SAHAM_MERGE_FROM_BOTTOM", "0") == "1"
+# Breakout retest zone at least this many ATR deep (0 = current: may collapse to one tick when the
+# close sits just above the breakout level, e.g. AAPL 348,14–348,22)
+BREAKOUT_MIN_ZONE_ATR = float(os.environ.get("SAHAM_BREAKOUT_MIN_ZONE", "0") or 0)
 
 IDX_TICKS = ((200, 1), (500, 2), (2000, 5), (5000, 10), (math.inf, 25))
 IDX_LOT = 100
@@ -140,6 +143,8 @@ def compute_trade_levels(df: pd.DataFrame, market: str = "IDX", is_breakout: boo
     if is_breakout and breakout_level:
         entry_high = price
         entry_low = max(float(breakout_level), price - 0.5 * atr)
+        if BREAKOUT_MIN_ZONE_ATR > 0:
+            entry_low = min(entry_low, price - BREAKOUT_MIN_ZONE_ATR * atr)
         entry_basis = f"retest area breakout {_fmt(float(breakout_level))}"
     elif near_support:
         entry_low = near_support["top"] - 0.25 * atr
@@ -156,6 +161,10 @@ def compute_trade_levels(df: pd.DataFrame, market: str = "IDX", is_breakout: boo
         entry_low = round_to_tick(entry_high - tick_size(entry_high, market), market, "down")
     recommended = round_to_tick((entry_low + entry_high) / 2, market, "down")
     recommended = min(max(recommended, entry_low), entry_high)
+    if entry_high - entry_low < 0.1 * atr:
+        # Display note only (a wider breakout zone was tested and rejected): the limit is
+        # practically the market price
+        flags.append("narrow_zone")
 
     # ── Cut loss under the nearest structure below the entry zone ──────────
     edge = "bottom" if STOP_UNDER_NEAR_ZONE else "top"

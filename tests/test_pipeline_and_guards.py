@@ -81,6 +81,16 @@ def test_fundamentals_keep_debt_to_equity_as_given(monkeypatch):
     assert out["debt_to_equity"] == 32.1
 
 
+def test_currency_mixed_pbv_is_unknown_not_expensive(monkeypatch):
+    # USD-reporting IDX miner: Yahoo divides an IDR price by a USD book value
+    info = {"returnOnEquity": 0.3, "profitMargins": 0.12, "debtToEquity": 5.0, "trailingPE": 8.4,
+            "priceToBook": 51470.59, "marketCap": 1e13}
+    monkeypatch.setattr(fundamentals.yf, "Ticker", lambda t: _Ticker(info))
+    monkeypatch.setattr("engine.sectors._save", lambda *a, **k: None)
+    out = fundamentals.fetch_and_evaluate_financials("ZZPB", "IDX", force_refresh=True)
+    assert out["pbv"] == 0.0 and not any("mahal" in r for r in out["reasons"])
+
+
 def test_failed_fundamentals_fetch_is_not_cached_as_zeros(monkeypatch):
     monkeypatch.setattr(fundamentals.yf, "Ticker", lambda t: _Ticker({}))
     out = fundamentals.fetch_and_evaluate_financials("ZZNA", "IDX")

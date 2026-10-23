@@ -184,6 +184,19 @@ def test_plan_whose_target_is_already_hit_today_waits():
     assert assess(with_levels(frozen=True, live={"status": "IN_ZONE", "price": 1}))["status"] == "LAYAK"
 
 
+def test_min_rr_gate_is_off_by_default_and_blocks_tight_room_when_set():
+    from engine.screener.actionability import assess, default_config
+    row = {"market": "IDX", "verdict": "MILD_BULLISH", "market_mode": "NORMAL", "score": 70,
+           "levels": {"risk_pct": 4.0, "risk_reward_ratio": 0.8, "flags": []},
+           "screen": {"avg_value_20d": 5e9}}
+    assert default_config()["min_rr"] == 0 and assess(row)["status"] == "LAYAK"
+    out = assess(row, {**default_config(), "min_rr": 1.2})
+    assert out["status"] == "TUNGGU" and out["gates"]["room_ok"] is False
+    assert any("Ruang ke TP1 sempit" in r for r in out["reasons"])
+    row["levels"]["risk_reward_ratio"] = 1.3
+    assert assess(row, {**default_config(), "min_rr": 1.2})["status"] == "LAYAK"
+
+
 def test_rank_puts_plans_missed_today_below_buyable_ones():
     from engine.screener.actionability import rank_key
 

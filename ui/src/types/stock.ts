@@ -27,8 +27,50 @@ export interface CandlestickData {
   pattern: string;
   label: string;
   signal: string;
+  /** Textbook label only; what the pattern did on IDX is in `evidence`. */
   reliability?: 'HIGH' | 'MEDIUM' | 'LOW';
   description?: string;
+  /** Event study on 126 IDX stocks 2024–2026 (null for plain candle colours). */
+  evidence?: {
+    verdict: 'terbukti' | 'tidak_terbukti' | 'data_kurang';
+    direction?: 'naik' | 'turun' | null;
+    text: string;
+    n: number;
+  } | null;
+}
+
+export interface StatementFlag {
+  code: string;
+  text: string;
+  level: 'danger' | 'warning' | 'info';
+}
+
+/** /api/stock/{ticker}/statements — information only, never changes score or status. */
+export interface FinancialStatements {
+  ticker: string;
+  sector?: string | null;
+  /** Currency of the reported figures (many IDX miners report in USD). */
+  currency?: string | null;
+  available: boolean;
+  financial: boolean;
+  last_year?: string | null;
+  revenue_growth_pct?: number | null;
+  net_income_growth_pct?: number | null;
+  revenue_cagr_3y_pct?: number | null;
+  profit_declines_3y?: number | null;
+  loss_years?: number | null;
+  net_margin_pct?: number | null;
+  ocf_to_net_income?: number | null;
+  free_cash_flow?: number | null;
+  roe_pct?: number | null;
+  debt_to_equity?: number | null;
+  current_ratio?: number | null;
+  interest_coverage?: number | null;
+  negative_equity?: boolean;
+  flags: StatementFlag[];
+  years: { period: string; revenue?: number | null; net_income?: number | null; ocf?: number | null }[];
+  quarters?: { period: string; revenue?: number | null; net_income?: number | null }[];
+  valuation?: { pe?: number | null; pbv?: number | null; sector_pe?: number | null; sector_pbv?: number | null; peers: number };
 }
 
 export type TrendDirection = 'NAIK_KUAT' | 'NAIK' | 'NETRAL' | 'TURUN' | 'TURUN_KUAT';
