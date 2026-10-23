@@ -41,7 +41,13 @@ def test_reading_follows_the_action_status():
     out = pipeline.align_reading(reading, {"status": "TUNGGU", "reasons": ["Likuiditas rendah"]})
     assert out["stance"] == "TUNGGU_PEMICU" and "Likuiditas rendah" in out["headline"]
     out = pipeline.align_reading({"stance": "TUNGGU_PEMICU", "headline": "h"}, {"status": "LAYAK", "reasons": []})
-    assert out["stance"] == "LAYAK_DIPERTIMBANGKAN"
+    assert out["stance"] == "LAYAK_DIPERTIMBANGKAN" and "order limit di zona beli" in out["headline"]
+    # LAYAK on a stock running without a discount: the headline says to wait for the zone, not "pantau"
+    out = pipeline.align_reading({"stance": "PANTAU", "headline": "Tren naik berjalan tanpa diskon — pantau."},
+                                 {"status": "LAYAK", "reasons": []})
+    assert "jangan dikejar" in out["headline"] and out["base_stance"] == "PANTAU"
+    kept = pipeline.align_reading({"stance": "LAYAK_DIPERTIMBANGKAN", "headline": "ok"}, {"status": "LAYAK", "reasons": []})
+    assert kept["headline"] == "ok"
     assert reading["stance"] == "LAYAK_DIPERTIMBANGKAN"                 # input not mutated
 
 

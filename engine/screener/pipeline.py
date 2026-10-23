@@ -47,8 +47,18 @@ def align_reading(reading: Optional[Dict[str, Any]], action: Dict[str, Any]) -> 
     elif status == "TUNGGU" and out.get("stance") == "LAYAK_DIPERTIMBANGKAN":
         out.update(stance="TUNGGU_PEMICU",
                    headline=f"Syarat eksekusi belum terpenuhi — {reasons[0]}" if reasons else out.get("headline"))
-    elif status == "LAYAK":
-        out.update(stance="LAYAK_DIPERTIMBANGKAN")
+    elif status == "LAYAK" and out.get("stance") != "LAYAK_DIPERTIMBANGKAN":
+        # The gates passed although the pullback reading alone would say "pantau"/"tunggu":
+        # the headline must explain how LAYAK is meant to be executed (limit order in the zone),
+        # not keep "entry lebih baik saat pullback" next to a green badge.
+        base = out.get("stance")
+        how = "Syarat eksekusi terpenuhi — beli hanya dengan order limit di zona beli, bukan di harga pasar."
+        if base == "PANTAU":
+            how += (" Harga sekarang di atas zona (tren berjalan tanpa diskon): pasang order dan tunggu harga turun"
+                    " ke zona; jangan dikejar.")
+        elif base in ("TUNGGU_PEMICU", "TUNGGU_PULLBACK"):
+            how += " Pemicu teknikal belum lengkap: ukuran posisi kecil, cut loss sesuai rencana."
+        out.update(stance="LAYAK_DIPERTIMBANGKAN", headline=how, base_stance=base)
     return out
 
 
