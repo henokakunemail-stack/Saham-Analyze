@@ -616,10 +616,49 @@ export interface PlanCheckpointRow extends PlanPosition {
   target_tp2: number;
 }
 
+export type RecapOutcome = 'STOP' | 'TP2' | 'TP1' | 'FILLED' | 'ZONE' | 'ABOVE';
+
+/** One stock: the last session's bar read against the plan it traded on. */
+export interface SessionRecapRow {
+  ticker: string;
+  source: 'Top 10' | 'Watchlist';
+  outcome: RecapOutcome;
+  text: string;
+  /** The buy limit (recommended entry) was reached during the session. */
+  filled: boolean;
+  session_date: string;
+  plan_as_of?: string | null;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  change_pct?: number | null;
+  entry_low: number;
+  entry_high: number;
+  recommended_entry?: number | null;
+  stop_loss: number;
+  target_tp1: number;
+  target_tp2: number;
+}
+
+export interface SessionRecap {
+  session_date: string | null;
+  /** Whether the session's daily bar is final (BEI: ±16:45 WIB). */
+  final?: boolean | null;
+  plan_as_of?: string | null;
+  /** Date of the remembered Top 10 the recap covers (null: today's list was used). */
+  list_from_plan?: string | null;
+  rows: SessionRecapRow[];
+  counts: Record<RecapOutcome, number>;
+  filled: number;
+}
+
 export interface PlanCheckpoint {
   session: import('./universe').MarketSession;
   live: boolean;
   rows: PlanCheckpointRow[];
   message?: string | null;
   checked_at?: string;
+  /** After the close: what the last session did to the plans it traded on. */
+  recap?: SessionRecap | null;
 }

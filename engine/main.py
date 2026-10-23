@@ -28,7 +28,7 @@ from .screener.sentiment import aggregate_news_sentiment, score_article_sentimen
 from .screener.scoring import compute_composite_score
 from .market_context import get_benchmark_context, direction_fields, with_news_risk
 from .screener.predictions import select_predictions
-from .collectors.data_quality import with_staleness
+from .collectors.data_quality import with_staleness, bar_is_final
 from .db import get_data_quality_report
 from . import scan_progress, universe, market_hours, notifications, app_lifecycle
 from .routes import signals as signals_routes, feedback as feedback_routes
@@ -40,6 +40,7 @@ from .routes import market as market_routes
 from . import market_breadth, sectors
 from .screener.actionability import assess as assess_action, rank_key
 from .screener.pipeline import analyze_frame
+from .screener import session_recap
 from .screener.scoring import PILLAR_WEIGHTS
 from .screener.fundamentals import fetch_and_evaluate_financials
 from .screener.broker_summary import fetch_and_evaluate_broker_summary, fetch_from_sectors_app
@@ -364,7 +365,10 @@ def _run_scan(market: str, force: bool = True) -> List[Dict[str, Any]]:
             plan_dates = {str((r.get("levels") or {}).get("as_of") or "")[:10] for r in results
                           if (r.get("levels") or {}).get("bar_final") and not (r.get("levels") or {}).get("frozen")}
             if len(plan_dates) == 1 and "" not in plan_dates:
-                save_prediction_snapshot(select_predictions(results), market=market, snapshot_date=plan_dates.pop())
+                plan_date = plan_dates.pop()
+                save_prediction_snapshot(select_predictions(results), market=market, snapshot_date=plan_date)
+                # The list the next session trades against, for the after-close recap
+                session_recap.save_plan_list(market, plan_date, [r["ticker"] for r in results[:10]])
             market_hours.mark_scan_done(market)
     except Exception as e:
         scan_progress.finish(error=str(e))
@@ -508,6 +512,29 @@ def get_stock_chart(
         "markers": [] if is_intraday else abnormal_days.markers(df, market),
     }
 
+def _session_recap(market: str, ranked: List[Dict[str, Any]], picks: Dict[str, str]) -> Optional[Dict[str, Any]]:
+    """After the close: the last session against the plans it traded on (the Top 10 that was
+    shown during it when remembered, else today's list) plus the watchlist."""
+    try:
+        dates = [str((r.get("levels") or {}).get("as_of") or "")[:10] for r in ranked[:20]]
+        latest = max((d for d in dates if d), default="")
+        plan_date, tickers = session_recap.plan_list_before(market, latest) if latest else (None, [])
+        if tickers:
+            chosen = {t: "Top 10" for t in tickers}
+            chosen.update({t: s for t, s in picks.items() if s == "Watchlist" and t not in chosen})
+        else:
+            chosen = picks
+        out = session_recap.recap(
+            market, chosen,
+            fetch=lambda t: fetch_stock_ohlcv(t, period="1y"),
+            plan_fn=lambda f: compute_technical_indicators(f, market, freeze_live_bar=False).get("levels") or {},
+            final_fn=lambda d: bar_is_final(d, market))
+        return {**out, "list_from_plan": plan_date}
+    except Exception as e:  # the recap is a convenience: never break the checkpoint
+        print(f"[Recap] {e}")
+        return None
+
+
 @app.get("/api/plan/checkpoint")
 def plan_checkpoint(market: str = Query("IDX", pattern="^(IDX|US)$"), top: int = 10):
     """Where today's price stands against each Top-10 / watchlist plan (made from the last final
@@ -525,7 +552,8 @@ def plan_checkpoint(market: str = Query("IDX", pattern="^(IDX|US)$"), top: int =
             picks.setdefault(normalize_ticker(w["ticker"], market), "Watchlist")
     if not session.get("trading_day_live"):
         return {"session": session, "live": False, "rows": [],
-                "message": "Bursa tidak sedang berjalan — rencana berlaku untuk sesi berikutnya."}
+                "message": "Bursa tidak sedang berjalan — rencana berlaku untuk sesi berikutnya.",
+                "recap": _session_recap(market, ranked, picks)}
 
     def one(ticker: str, source: str) -> Optional[Dict[str, Any]]:
         df = fetch_stock_ohlcv(ticker, period="1y")
