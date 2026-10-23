@@ -1,0 +1,17 @@
+# SAHAM on a Linux server. Usage: cp deploy/.env.example .env  (edit)  →  docker compose up -d --build
+services:
+  saham:
+    build: .
+    image: saham:latest
+    container_name: saham
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - saham-data:/data            # database (settings, watchlist, history, cached candles) + yfinance cache (/data/.cache)
+    ports:
+      - "127.0.0.1:8765:8765"       # local only — reach it via SSH tunnel or the HTTPS proxy (see docs)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # lets the engine reach a 9router running on the same server
+
+volumes:
+  saham-data:

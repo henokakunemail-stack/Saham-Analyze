@@ -1,0 +1,55 @@
+{
+  "_doc": [
+    "Yahoo Finance sector/industry -> Indonesian sector label close to the IDX-IC classification.",
+    "Lookup order in engine/sectors.py: overrides[ticker] -> industries[Yahoo industry] -> sectors[Yahoo sector] -> 'Lainnya'.",
+    "Communication Services is split by industry the way IDX-IC does it: telecom -> Infrastruktur,",
+    "internet platforms -> Teknologi, media & entertainment -> Konsumen Non-Primer. Any other",
+    "Communication Services industry falls back to Infrastruktur (telecom dominates this sector on IDX).",
+    "Utilities and heavy construction are Infrastruktur; transport industries of Yahoo 'Industrials' are",
+    "Transportasi & Logistik; coal is always Energi (Yahoo files coking coal under Basic Materials).",
+    "Add a ticker to 'overrides' (normalized, e.g. BBCA.JK) when Yahoo labels it oddly or not at all."
+  ],
+  "unknown": "Lainnya",
+  "sectors": {
+    "Energy": "Energi",
+    "Basic Materials": "Barang Baku",
+    "Industrials": "Perindustrian",
+    "Consumer Defensive": "Konsumen Primer",
+    "Consumer Cyclical": "Konsumen Non-Primer",
+    "Healthcare": "Kesehatan",
+    "Financial Services": "Keuangan",
+    "Financial": "Keuangan",
+    "Real Estate": "Properti & Real Estat",
+    "Technology": "Teknologi",
+    "Communication Services": "Infrastruktur",
+    "Utilities": "Infrastruktur"
+  },
+  "industries": {
+    "Telecom Services": "Infrastruktur",
+    "Internet Content & Information": "Teknologi",
+    "Entertainment": "Konsumen Non-Primer",
+    "Broadcasting": "Konsumen Non-Primer",
+    "Advertising Agencies": "Konsumen Non-Primer",
+    "Publishing": "Konsumen Non-Primer",
+    "Electronic Gaming & Multimedia": "Konsumen Non-Primer",
+    "Marine Shipping": "Transportasi & Logistik",
+    "Airlines": "Transportasi & Logistik",
+    "Airports & Air Services": "Transportasi & Logistik",
+    "Trucking": "Transportasi & Logistik",
+    "Railroads": "Transportasi & Logistik",
+    "Integrated Freight & Logistics": "Transportasi & Logistik",
+    "Engineering & Construction": "Infrastruktur",
+    "Infrastructure Operations": "Infrastruktur",
+    "Thermal Coal": "Energi",
+    "Coking Coal": "Energi"
+  },
+  "overrides": {
+    "BBCA.JK": "Keuangan",
+    "BBRI.JK": "Keuangan",
+    "BMRI.JK": "Keuangan",
+    "TLKM.JK": "Infrastruktur",
+    "ADRO.JK": "Energi",
+    "PTBA.JK": "Energi",
+    "ITMG.JK": "Energi"
+  }
+}

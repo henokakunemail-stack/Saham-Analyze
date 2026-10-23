@@ -1,0 +1,26 @@
+# Alternatif tanpa Docker: systemd service (lihat docs/DEPLOY_LINUX.md, bagian "Tanpa Docker")
+# Salin ke /etc/systemd/system/saham.service lalu: sudo systemctl daemon-reload && sudo systemctl enable --now saham
+[Unit]
+Description=SAHAM engine (FastAPI + auto-scanner + Telegram bot)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=saham
+Group=saham
+WorkingDirectory=/opt/saham
+Environment=SAHAM_SERVER_MODE=1
+Environment=SAHAM_DB_PATH=/var/lib/saham/saham.db
+Environment=PYTHONUNBUFFERED=1
+# SAHAM_BASIC_AUTH=user:sandi (file ini dibaca bila ada; izin 600, milik root)
+EnvironmentFile=-/etc/saham.env
+ExecStart=/opt/saham/.venv/bin/python -m uvicorn engine.main:app --host 127.0.0.1 --port 8765 --workers 1
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/saham
+
+[Install]
+WantedBy=multi-user.target

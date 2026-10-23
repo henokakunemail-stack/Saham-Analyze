@@ -1,0 +1,15 @@
+# Runtime (versions verified with Python 3.12; lower bounds = known-good, upper = next major)
+fastapi>=0.110,<1.0        # tested 0.143.0 (pulls starlette + pydantic v2)
+pydantic>=2.0,<3.0         # tested 2.14.1
+uvicorn>=0.29,<1.0         # tested 0.54.0
+yfinance>=0.2.54,<2.0      # tested 1.7.0 (history(timeout=...), curl_cffi transport)
+pandas>=2.2,<4.0           # tested 3.0.6
+numpy>=1.26,<3.0           # tested 2.5.4
+feedparser>=6.0.11,<7.0    # tested 6.0.14
+requests>=2.31,<3.0        # tested 2.34.2 (AI gateway, Sectors.app)
+anthropic>=1.17,<2.0       # tested 1.17.0 (Claude provider: Messages API, Models API, structured outputs)
+tzdata>=2024.1             # IANA zones for zoneinfo on Windows (exchange session clock)
+
+# Dev / tests (not bundled):  pip install "pytest>=8" "httpx>=0.27"
+#   python -m pytest -q            offline suite (network tests skipped)
+#   python -m pytest -q -m network live yfinance/API checks

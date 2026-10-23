@@ -1,0 +1,7 @@
+# Normalize line endings in the repository; Windows checkouts keep CRLF for .bat/.nsi only
+* text=auto
+*.bat text eol=crlf
+*.nsi text eol=crlf
+*.png binary
+*.ico binary
+*.db binary

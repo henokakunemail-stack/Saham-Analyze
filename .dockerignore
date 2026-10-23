@@ -1,0 +1,19 @@
+# Keep the image small and free of local data/secrets
+**/__pycache__
+**/*.pyc
+**/*.db
+**/*.db-shm
+**/*.db-wal
+saham.db
+engine/saham.db*
+ui/node_modules
+ui/dist
+dist
+build
+tests
+pic
+.claude
+.env
+*.spec
+*.nsi
+*.bat

@@ -1,0 +1,36 @@
+# Database & secrets (saham.db holds API keys, bot token, watchlist, history)
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+!deploy/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Build output
+build/
+dist/
+ui/dist/
+ui/node_modules/
+ui/tsconfig.tsbuildinfo
+*.log
+*.spec.bak
+
+# Editors / tooling
+.claude/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Scratch
+*.pkl
+rows*.json
+report*.json
