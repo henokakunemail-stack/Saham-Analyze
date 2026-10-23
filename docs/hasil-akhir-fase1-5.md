@@ -68,7 +68,9 @@ Sakelar tetap tersedia dan mati: `SAHAM_STOP_NEAR_ZONE`, `SAHAM_MERGE_FROM_BOTTO
 | Aturan | Status |
 |---|---|
 | Syarat "tanpa ARB/limit-down/suspensi 3 hari terakhir" | dipakai (pengaman logis; hari terkunci juga tidak lagi dibaca sebagai sinyal VSA) |
-| Peringkat: status → masih bisa dibeli hari ini (belum sentuh TP / belum tembus cut loss) → skor asli → skor → R:R → likuiditas | dipakai |
+| Peringkat: status → **layak dipasang order dari harga sekarang** → skor asli → skor → R:R → likuiditas. Tingkat: 0 = entry ≤ 0,5 ATR di bawah harga & TP1 masih di atas harga; 1 = entry 0,5–1 ATR di bawah harga **atau** TP1 sudah ≤ harga; 2 = harga > 1 ATR di atas zona; 3 = TP sudah tersentuh / cut loss tembus hari ini | dipakai |
+
+Bukti jarak entry (23.923 rencana, order limit 5 hari): terisi **77–81 %** bila entry ≤ 0,25 ATR di bawah penutupan, 58–62 % pada 0,25–0,5 ATR, **38–42 %** pada 0,5–1 ATR, 23–27 % di atas 1 ATR — konsisten di kedua periode. Di periode uji rencana LAYAK yang entry-nya jauh juga merugi (0,25–0,5 ATR −0,12 R; 0,5–1 ATR −0,39 R; n kecil) sementara yang dekat +0,24 R. Rencana dengan TP1 ≤ penutupan: sampel kecil (19 / 7 LAYAK), diturunkan atas dasar logika (target sudah tercapai), bukan bukti. Tingkat ini hanya mengubah **urutan**, bukan status. |
 | TP sudah tersentuh hari ini → TUNGGU | dipakai (aturan intraday) |
 | ATR & pivot "bersih" (`CLEAN_LEVELS`) | tidak dipakai — perlu diuji ulang dengan simulator baru sebelum dipertimbangkan lagi |
 | Breadth ≥ 30 % sebagai rem | tidak dipakai — sama, perlu diuji ulang |

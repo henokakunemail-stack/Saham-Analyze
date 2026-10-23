@@ -195,6 +195,24 @@ export const LevelBasis: React.FC<{ levels?: TradeLevels | null; compact?: boole
       <div>
         <span className="text-gray-500">TP1:</span> {levels.tp1_basis} · <span className="text-gray-500">TP2:</span> {levels.tp2_basis}
       </div>
+      {(() => {
+        // What the plan means from where the price is now: how far it must dip to fill the limit,
+        // and how much room is left to TP1 — the two numbers that decide whether it is worth an order
+        const now = levels.live?.price ?? levels.price;
+        if (!now || !(levels.recommended_entry > 0) || !(levels.target_tp1 > 0)) return null;
+        const pct = (v: number) => {
+          const p = (v / now - 1) * 100;
+          return `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p).toLocaleString('id-ID', { maximumFractionDigits: 1 })}%`;
+        };
+        const room = levels.target_tp1 / now - 1;
+        return (
+          <div className="font-mono">
+            <span className="text-gray-500 font-sans">Dari harga sekarang {fmt(now)}:</span> saran beli{' '}
+            {pct(levels.recommended_entry)} · TP1 <span className={room <= 0 ? 'text-amber-300' : ''}>{pct(levels.target_tp1)}</span>
+            {room <= 0 && <span className="font-sans text-amber-300"> — target sudah tercapai di harga sekarang</span>}
+          </div>
+        );
+      })()}
       <div className="font-mono">
         Risiko {fmt(levels.risk_pct)}% · Potensi ke TP1 {fmt(levels.reward_pct)}%
         {levels.risk_per_lot ? ` · Risiko per lot ≈ Rp${fmt(levels.risk_per_lot)}` : ''} · Fraksi harga {fmt(levels.tick)}

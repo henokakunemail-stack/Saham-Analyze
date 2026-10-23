@@ -32,13 +32,26 @@ def _row(t, raw, live=None):
 
 
 def test_rank_tiers_follow_executability_today():
-    rows = [_row("ATTP", 95, plan_position(LV, 4940, 4950, 4900)),
-            _row("FAR", 94, plan_position(LV, 4900, 4905, 4880)),
-            _row("NEAR", 70, plan_position(LV, 4850, 4860, 4800)),
+    rows = [_row("ATTP", 95, plan_position(LV, 4940, 4950, 4900)),   # at TP1: over for today
+            _row("FAR", 94, plan_position(LV, 4900, 4905, 4880)),    # 1.1 ATR above the zone
+            _row("MID", 90, plan_position(LV, 4850, 4860, 4800)),    # 0.6 ATR: limit fills ~40 %
+            _row("NEAR", 70, plan_position(LV, 4820, 4830, 4800)),   # 0.3 ATR
             _row("ZONE", 65, plan_position(LV, 4750, 4760, 4740)),
-            _row("FRESH", 60)]                                     # closing scan: no live data
-    assert [today_tier(r["levels"]) for r in rows] == [2, 1, 0, 0, 0]
-    assert [r["ticker"] for r in sorted(rows, key=rank_key)] == ["NEAR", "ZONE", "FRESH", "FAR", "ATTP"]
+            _row("FRESH", 60)]                                       # closing scan: no live, no price
+    assert [today_tier(r["levels"]) for r in rows] == [3, 2, 1, 0, 0, 0]
+    assert [r["ticker"] for r in sorted(rows, key=rank_key)] == ["NEAR", "ZONE", "FRESH", "MID", "FAR", "ATTP"]
+
+
+def test_fresh_plan_tiers_use_the_close_the_plan_was_built_from():
+    def fresh(t, raw, price, tp1=4910):
+        r = _row(t, raw)
+        r["levels"].update(price=price, target_tp1=tp1)
+        return r
+    rows = [fresh("NOROOM", 99, 4830, tp1=4820),   # close 0.4 ATR above the zone, but TP1 already under it
+            fresh("DEEP", 95, 4860),                # entry 0.7 ATR under the close
+            fresh("OK", 70, 4800)]                  # 0.1 ATR
+    assert [today_tier(r["levels"]) for r in rows] == [1, 1, 0]
+    assert [r["ticker"] for r in sorted(rows, key=rank_key)] == ["OK", "NOROOM", "DEEP"]
 
 
 def test_live_reading_overrides_yesterdays_trigger_text():

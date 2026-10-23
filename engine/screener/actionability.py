@@ -248,20 +248,37 @@ def assess(row: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> Dict
     return {"status": status, "reasons": reasons, "gates": gates}
 
 
-# During the session the rank also asks whether the plan can still be executed today:
-#   0 price near/inside the plan (or no live data: the plan is fresh from the close)
-#   1 far above the buy zone (> trade_levels.FAR_ABOVE_ATR): a limit order is unlikely to fill today
-#   2 target already reached or cut loss broken: the plan is over for today
+# Besides the status, the rank asks whether the plan is worth an order from where the price is
+# (the live price during the session, the close the plan was built from otherwise):
+#   0 entry within NEAR_ATR of the price and TP1 still above it
+#   1 entry 0.5–1 ATR below the price (backtest: the limit fills ~40 % of the time vs ~77 % when
+#     ≤ 0.25 ATR) or TP1 already at/under the price (no room left — logic, small backtest sample)
+#   2 more than FAR_ABOVE_ATR above the zone: a limit order is unlikely to fill soon
+#   3 target already reached or cut loss broken today: the plan is over
+# Evidence: docs/hasil-akhir-fase1-5.md ("Peringkat").
 MISSED_TODAY = ("AT_TP1", "AT_TP2", "BELOW_STOP")
+NEAR_ATR = 0.5
+FAR_ABOVE_ATR = 1.0
 
 
 def today_tier(levels: Dict[str, Any]) -> int:
     live = levels.get("live") if levels.get("frozen") else None
-    if not isinstance(live, dict):
+    ref = None
+    if isinstance(live, dict):
+        if live.get("status") in MISSED_TODAY or live.get("touched_stop"):
+            return 3
+        ref = _num(live.get("price"))
+    if ref is None:
+        ref = _num(levels.get("price"))
+    atr, eh, tp1 = _num(levels.get("atr14")), _num(levels.get("entry_high")), _num(levels.get("target_tp1"))
+    if ref is None or not eh:
         return 0
-    if live.get("status") in MISSED_TODAY or live.get("touched_stop"):
+    dist = (ref - eh) / atr if atr and ref > eh else 0.0
+    if dist > FAR_ABOVE_ATR:
         return 2
-    return 1 if live.get("far_above") else 0
+    if dist > NEAR_ATR or (tp1 and ref >= tp1):
+        return 1
+    return 0
 
 
 def missed_today(levels: Dict[str, Any]) -> bool:

@@ -116,6 +116,8 @@ export const Top10Potential: React.FC<Props> = ({
             Peringkat skor tertinggi (bukan jaminan naik). Dianalisis secara multi-dimensi menggabungkan konfluensi <strong>Indikator Teknikal</strong> (EMA, RSI, MACD),
             <strong> Aliran Uang CMF</strong> (indikasi dari harga &amp; volume), <strong>Pola Candlestick</strong>,
             dan <strong>Sentimen Berita Pasar</strong> beserta kalkulasi otomatis harga <strong>Entry, Take Profit, dan Cutloss</strong>.
+            {' '}Urutan: status eksekusi → <strong>layak dipasang order dari harga sekarang</strong> (entry dekat, TP1 masih di atas
+            harga; saham yang sudah di TP, jebol cut loss, atau lari jauh dari zona turun ke bawah) → skor.
           </p>
         </div>
 
