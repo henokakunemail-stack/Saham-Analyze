@@ -607,21 +607,6 @@ export interface ScanStatus {
   scan_count: number;
 }
 
-export interface PlanCheckpointRow extends PlanPosition {
-  ticker: string;
-  source: 'Top 10' | 'Watchlist';
-  /** LAYAK / TUNGGU / HINDARI of the stock's scan row (newer engines). */
-  action_status?: string | null;
-  as_of?: string | null;
-  entry_low: number;
-  entry_high: number;
-  /** Buy-limit price the plan/backtest assumes (sent by newer engines). */
-  recommended_entry?: number | null;
-  stop_loss: number;
-  target_tp1: number;
-  target_tp2: number;
-}
-
 export type RecapOutcome = 'STOP' | 'TP2' | 'TP1' | 'FILLED' | 'ZONE' | 'ABOVE';
 
 /** One stock: the last session's bar read against the plan it traded on. */
@@ -659,12 +644,50 @@ export interface SessionRecap {
   filled: number;
 }
 
-export interface PlanCheckpoint {
+/** Honest reading of a plan built from a final close (engine/screener/closing_review.assess). */
+export interface PlanAssessment {
+  verdict: string;
+  points: string[];
+  /** The one warning worth showing without expanding (target reached, small room, volatile). */
+  caution?: string | null;
+  /** Backtest share of plans whose buy limit filled within 5 trading days at this distance. */
+  fill_pct: number | null;
+  /** Close above the buy zone, in ATR. */
+  dist_atr: number | null;
+  risk_pct?: number;
+  reward_pct?: number;
+  rr?: number | null;
+}
+
+export interface ClosingReviewRow {
+  ticker: string;
+  in_top: boolean;
+  watchlist: boolean;
+  status?: string | null;
+  plan?: {
+    price?: number;
+    as_of?: string;
+    recommended_entry?: number;
+    entry_low?: number;
+    entry_high?: number;
+    stop_loss?: number;
+    target_tp1?: number;
+    target_tp2?: number;
+    risk_reward_ratio?: number;
+  } | null;
+  assessment?: PlanAssessment | null;
+  recap?: SessionRecapRow | null;
+}
+
+export interface ClosingReview {
+  /** Close the next-session plans are built from. */
+  plan_as_of: string | null;
+  /** Last final session the recap reads. */
+  session_date: string | null;
+  recap_plan_as_of: string | null;
+  counts: Record<RecapOutcome, number> | null;
+  status_history: Record<string, { avg_r: number; plans: number; filled: number }>;
+  rows: ClosingReviewRow[];
   session: import('./universe').MarketSession;
-  live: boolean;
-  rows: PlanCheckpointRow[];
-  message?: string | null;
-  checked_at?: string;
-  /** After the close: what the last session did to the plans it traded on. */
-  recap?: SessionRecap | null;
+  market_mode?: string | null;
 }

@@ -194,7 +194,7 @@ export function summarizeAnalysis(a: SummaryInput): PlainSummary {
     );
   }
   if (up && stretched) {
-    waitFor.push(`Pullback mendekati EMA20${ema20 !== undefined ? ` (~${fmtPrice(ema20)})` : ''}${zone ? ` atau zona entry ${zone}` : ''}.`);
+    waitFor.push(`Pullback mendekati EMA20${ema20 !== undefined ? ` (~${fmtPrice(ema20)})` : ''}${zone ? ` atau zona beli ${zone}` : ''}.`);
   }
   if (up && !inflow) waitFor.push('Konfirmasi aliran dana (CMF positif) dan volume di atas rata-rata.');
   if (squeeze) waitFor.push('Arah keluar dari squeeze, idealnya disertai volume ≥ 1,3x.');
@@ -207,7 +207,7 @@ export function summarizeAnalysis(a: SummaryInput): PlainSummary {
   }
   if (overbought && !stretched) waitFor.push('RSI turun kembali di bawah 70 (momentum mendingin).');
   if (weakMarket && !marketBearish) waitFor.push('Indeks pulih atau stabil terlebih dahulu.');
-  if (rr !== undefined && rr < 1.4 && !stretched) waitFor.push('Harga lebih dekat ke zona entry agar rasio risiko/imbal hasil ≥ 1 : 1,4.');
+  if (rr !== undefined && rr < 1.4 && !stretched) waitFor.push('Harga turun lebih dekat ke zona beli agar ruang untung sebanding dengan risiko (≥ 1 : 1,4).');
   if (confluence !== undefined && confluence < 4 && up) {
     const failed = Object.entries(gates).filter(([, v]) => !v).length;
     waitFor.push(`Lebih banyak gerbang konfluensi lolos (saat ini ${confluence}/6${failed ? `, ${failed} belum` : ''}).`);

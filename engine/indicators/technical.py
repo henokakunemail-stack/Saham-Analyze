@@ -1,7 +1,12 @@
 """Technical indicators implementation with pure Pandas."""
+import os
 import pandas as pd
 import numpy as np
 from typing import Dict, Any
+
+# "new" = engine/indicators/candles.detect (context + size + bearish counterparts); under test,
+# see docs/hasil-uji-candlestick.md
+CANDLE_DETECTOR = os.environ.get("SAHAM_CANDLES", "old")
 
 def detect_candlestick_pattern(df: pd.DataFrame) -> Dict[str, Any]:
     """Detect key single-bar and multi-bar candlestick patterns with reliability."""
@@ -221,7 +226,11 @@ def compute_technical_indicators(df: pd.DataFrame, market: str = "IDX", freeze_l
     change_pct = float(((current_price - prev_price) / prev_price) * 100) if prev_price > 0 else 0.0
     is_breakout = bool(current_price >= prev_20d_high)
 
-    candlestick = detect_candlestick_pattern(df)
+    if CANDLE_DETECTOR == "new":
+        from .candles import detect as detect_candles
+        candlestick = detect_candles(df, atr14)
+    else:
+        candlestick = detect_candlestick_pattern(df)
 
     # 7. Realistic ATR-Based Entry Zone
     # Recent 5-day swing support

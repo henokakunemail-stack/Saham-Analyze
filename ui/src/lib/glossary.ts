@@ -343,7 +343,7 @@ const ENTRIES: GlossaryEntry[] = [
   }),
   E({
     key: 'mfs_STRONG_INFLOW',
-    term: 'Akumulasi Masif (STRONG_INFLOW)',
+    term: 'Akumulasi kuat (STRONG_INFLOW)',
     category: 'Aliran Dana',
     what: 'CMF ≥ 0,15, atau CMF ≥ 0,08 + divergensi OBV bullish, atau VSA Absorption/Markup.',
     read: 'Tekanan beli kuat dalam data harga-volume.',
@@ -372,7 +372,7 @@ const ENTRIES: GlossaryEntry[] = [
   }),
   E({
     key: 'mfs_STRONG_OUTFLOW',
-    term: 'Distribusi Masif (STRONG_OUTFLOW)',
+    term: 'Distribusi kuat (STRONG_OUTFLOW)',
     category: 'Aliran Dana',
     what: 'CMF ≤ −0,12, atau CMF ≤ −0,05 + OBV bearish, atau VSA Buying Climax/Selling Pressure.',
     read: 'Tekanan jual kuat; kenaikan harga cenderung kurang didukung.',

@@ -3,7 +3,7 @@ import { ScreenerItem } from '../types/stock';
 import { InflowBadge } from './InflowBadge';
 import { ReadingPlan, LatestNews } from './StockReading';
 import { LevelBasis, PlanNow } from './FlowSummaryCard';
-import { PlanCheckpoint } from './PlanCheckpoint';
+import { ClosingReview } from './ClosingReview';
 import { AbnormalDaysChip } from './AbnormalDaysChip';
 import { ActionStatusBadge } from './ActionStatusBadge';
 import { ReasonChip } from './ReasonChip';
@@ -70,13 +70,13 @@ export const Top10Potential: React.FC<Props> = ({
   });
 
   const pill = (active: boolean, activeCls: string) =>
-    `px-3 py-1 rounded-lg text-xs font-semibold transition-all ${active ? `${activeCls} shadow font-bold` : 'text-gray-400 hover:text-white'}`;
+    `px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${active ? `${activeCls} shadow font-bold` : 'text-gray-300 hover:text-white'}`;
 
   return (
-    <div className="space-y-6">
-      {/* Page Title & Summary Banner */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-surface to-surface border border-emerald-500/20 flex flex-col md:flex-row md:items-start justify-between gap-4">
-        <div className="space-y-2">
+    <div className="space-y-4">
+      {/* Page title: one row, then at most a few one-line notes */}
+      <div className="px-5 py-4 rounded-2xl bg-gradient-to-r from-emerald-950/30 via-surface to-surface border border-emerald-500/20 space-y-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
               <TrendingUp className="w-5 h-5" />
@@ -90,59 +90,79 @@ export const Top10Potential: React.FC<Props> = ({
               </p>
             </InfoTip>
           </div>
-          {top10All.some((s) => s.market_mode === 'CRASH' || s.market_mode === 'BEARISH') && (
-            <p className="text-xs font-semibold text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-lg px-2.5 py-1.5 max-w-2xl">
-              ⛔ Pasar sedang {top10All.some((s) => s.market_mode === 'CRASH') ? 'krisis' : 'bearish'}: daftar ini hanya peringkat
-              relatif. Utamakan saham berstatus LAYAK, pakai ukuran posisi kecil.
-            </p>
-          )}
           {hasStatus && (
-            <p className="text-xs text-gray-300 flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-emerald-300">{countOf('LAYAK')} LAYAK</span>·
-              <span className="font-semibold text-amber-300">{countOf('TUNGGU')} TUNGGU</span>·
-              <span className="font-semibold text-rose-300">{countOf('HINDARI')} HINDARI</span>
-              {countOf('LAYAK') === 0 && (
-                <span className="text-gray-400">— belum ada yang layak dieksekusi; ini saham terbaik untuk ditunggu.</span>
-              )}
-            </p>
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                {countOf('LAYAK')} LAYAK
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-200 border border-amber-500/25">
+                {countOf('TUNGGU')} TUNGGU
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/25">
+                {countOf('HINDARI')} HINDARI
+              </span>
+            </div>
           )}
-          {crowded.map(([sector, tickers]) => (
-            <p key={sector} className="text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 max-w-2xl">
-              ⚠️ {tickers.length} saham dari sektor {sector} ({tickers.join(', ')}) — cenderung bergerak bersama; risiko
-              terkonsentrasi bila semuanya dibeli.
-            </p>
-          ))}
-          <p className="text-xs text-gray-400 max-w-2xl leading-relaxed">
-            10 saham terbaik dari scan terakhir, masing-masing dengan rencana: <b className="text-gray-200">harga beli (limit)</b>,{' '}
-            <b className="text-gray-200">cut loss</b>, dan <b className="text-gray-200">target</b>. Skor bukan jaminan naik — selalu pasang cut loss.
-            {frozenDay && ' Selama bursa buka, rencana dikunci dari penutupan terakhir; yang bergerak hanya harga (tertunda ±15 menit).'}
+        </div>
+        <p className="text-xs text-gray-300 max-w-3xl leading-relaxed">
+          10 saham terbaik dari scan terakhir, masing-masing dengan <b className="text-white">harga beli (limit)</b>,{' '}
+          <b className="text-white">cut loss</b>, dan <b className="text-white">target</b>.
+          {hasStatus && countOf('LAYAK') === 0 && ' Belum ada yang layak dieksekusi — ini saham terbaik untuk ditunggu.'}
+          {' '}Skor bukan jaminan naik; selalu pasang cut loss.
+        </p>
+        {top10All.some((s) => s.market_mode === 'CRASH' || s.market_mode === 'BEARISH') && (
+          <p className="text-xs text-rose-300 flex items-start gap-1.5">
+            <span aria-hidden="true">⛔</span>
+            <span>
+              Pasar sedang {top10All.some((s) => s.market_mode === 'CRASH') ? 'krisis' : 'bearish'} — daftar ini peringkat relatif;
+              utamakan saham LAYAK dan ukuran posisi kecil.
+            </span>
           </p>
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-[#090D16] p-1.5 rounded-xl border border-borderMuted self-start">
-          <button onClick={() => setFilterMode('ALL')} className={pill(filterMode === 'ALL', 'bg-emerald-500 text-black')}>
-            Semua
-          </button>
-          {hasStatus && (
-            <button onClick={() => setFilterMode('LAYAK')} className={pill(filterMode === 'LAYAK', 'bg-emerald-400 text-black')}>
-              Layak ({countOf('LAYAK')})
-            </button>
-          )}
-          <button onClick={() => setFilterMode('CONFIRMED')} className={pill(filterMode === 'CONFIRMED', 'bg-sky-500 text-black')}>
-            Sinyal kuat (konfluensi)
-          </button>
-          <button onClick={() => setFilterMode('STRONG_INFLOW')} className={pill(filterMode === 'STRONG_INFLOW', 'bg-emerald-600 text-white')}>
-            Akumulasi kuat
-          </button>
-        </div>
+        )}
+        {crowded.map(([sector, tickers]) => (
+          <p key={sector} className="text-xs text-amber-300 flex items-start gap-1.5">
+            <span aria-hidden="true">⚠️</span>
+            <span>
+              {tickers.length} saham sektor {sector} ({tickers.join(', ')}) cenderung bergerak bersama — risiko terkonsentrasi bila
+              semuanya dibeli.
+            </span>
+          </p>
+        ))}
+        {frozenDay && (
+          <p className="text-[11px] text-gray-400">
+            Bursa sedang berjalan: rencana dikunci dari penutupan terakhir; yang bergerak hanya harga (tertunda ±15 menit).
+          </p>
+        )}
       </div>
 
-      {market && <PlanCheckpoint market={market} onSelectTicker={onSelectTicker} />}
+      {market && <ClosingReview market={market} onSelectTicker={onSelectTicker} />}
+
+      {/* Filters act on the cards below, so they sit right above them */}
+      {top10All.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] text-gray-400">Tampilkan kartu:</span>
+          <div className="flex flex-wrap items-center gap-1 bg-[#090D16] p-1 rounded-xl border border-borderMuted">
+            <button onClick={() => setFilterMode('ALL')} className={pill(filterMode === 'ALL', 'bg-emerald-500 text-black')}>
+              Semua ({top10All.length})
+            </button>
+            {hasStatus && (
+              <button onClick={() => setFilterMode('LAYAK')} className={pill(filterMode === 'LAYAK', 'bg-emerald-400 text-black')}>
+                Layak ({countOf('LAYAK')})
+              </button>
+            )}
+            <button onClick={() => setFilterMode('CONFIRMED')} className={pill(filterMode === 'CONFIRMED', 'bg-sky-500 text-black')}>
+              Sinyal kuat
+            </button>
+            <button onClick={() => setFilterMode('STRONG_INFLOW')} className={pill(filterMode === 'STRONG_INFLOW', 'bg-emerald-600 text-white')}>
+              Akumulasi kuat
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Grid of Top 10 Cards */}
       {top10All.length === 0 && isLoading ? (
-        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4" aria-busy="true">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4" aria-busy="true">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="p-5 rounded-2xl bg-surface border border-borderMuted animate-pulse space-y-4" aria-hidden="true">
               <div className="flex items-center justify-between">
@@ -189,7 +209,7 @@ export const Top10Potential: React.FC<Props> = ({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
           {displayedItems.map((stock) => {
             const rank = top10All.findIndex((s) => s.ticker === stock.ticker) + 1;
             const isPos = (stock.change_pct ?? 0) >= 0;
@@ -326,15 +346,15 @@ export const Top10Potential: React.FC<Props> = ({
                       <div className="p-2 rounded-lg bg-cyan-500/5 border border-cyan-500/25">
                         <div className="text-[11px] text-cyan-300 font-semibold flex items-center justify-center gap-1">
                           <Compass className="w-3 h-3" />
-                          <span>Harga beli (limit)</span>
+                          <span>Harga beli</span>
                           <InfoTip term="buy_limit" />
                         </div>
                         <div className="text-base font-mono font-bold text-cyan-200 mt-0.5">{fmtPrice(entryPrice)}</div>
-                        {stock.entry_low && stock.entry_high ? (
-                          <div className="text-[10px] text-gray-400 font-mono">
-                            zona {fmtPrice(stock.entry_low)}–{fmtPrice(stock.entry_high)}
-                          </div>
-                        ) : null}
+                        <div className="text-[10px] text-gray-400 font-mono">
+                          {stock.entry_low && stock.entry_high
+                            ? `limit · zona ${fmtPrice(stock.entry_low)}–${fmtPrice(stock.entry_high)}`
+                            : 'order limit'}
+                        </div>
                       </div>
 
                       <div className="p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/25">

@@ -15,27 +15,27 @@ interface Props {
 
 const STYLES: Record<MoneyFlowStatus, { label: string; cls: string; icon: React.ReactNode }> = {
   STRONG_INFLOW: {
-    label: 'AKUMULASI MASIF',
+    label: 'Akumulasi kuat',
     cls: 'font-semibold bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    icon: <Flame className="w-3.5 h-3.5 text-emerald-400 animate-pulse" aria-hidden="true" />,
+    icon: <Flame className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />,
   },
   MILD_INFLOW: {
-    label: 'AKUMULASI',
+    label: 'Akumulasi',
     cls: 'font-medium bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
     icon: <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />,
   },
   NEUTRAL: {
-    label: 'NETRAL',
+    label: 'Netral',
     cls: 'font-medium bg-slate-800 text-slate-300 border-slate-700',
     icon: <Minus className="w-3 h-3 text-slate-400" aria-hidden="true" />,
   },
   MILD_OUTFLOW: {
-    label: 'DISTRIBUSI',
+    label: 'Distribusi',
     cls: 'font-medium bg-amber-500/10 text-amber-300 border-amber-500/20',
     icon: <ArrowDownRight className="w-3.5 h-3.5" aria-hidden="true" />,
   },
   STRONG_OUTFLOW: {
-    label: 'DISTRIBUSI MASIF',
+    label: 'Distribusi kuat',
     cls: 'font-semibold bg-rose-500/15 text-rose-400 border-rose-500/30',
     icon: <AlertTriangle className="w-3.5 h-3.5 text-rose-400" aria-hidden="true" />,
   },
@@ -49,7 +49,7 @@ export const InflowBadge: React.FC<Props> = ({ status, cmf, showIcon = true, inf
   return (
     <span className="inline-flex items-center gap-1">
       <span
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border ${st.cls}`}
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border whitespace-nowrap ${st.cls}`}
         title={entry ? `${entry.term}: ${entry.what}` : undefined}
       >
         {showIcon && st.icon}

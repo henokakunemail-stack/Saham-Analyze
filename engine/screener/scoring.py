@@ -9,7 +9,12 @@ Oscillator, candlestick and VSA signals are read in trend context, and a bearish
 market (index in a downtrend) switches the model to a defensive mode.
 """
 import math
+import os
 from typing import Dict, Any, Optional, List, Tuple
+
+# Candlestick patterns in the setup pillar: "on" (default) or "off" — under test,
+# see docs/hasil-uji-candlestick.md
+CANDLE_SCORING = os.environ.get("SAHAM_CANDLE_SCORE", "on")
 
 PILLAR_WEIGHTS = {
     "pullback": 0.35,
@@ -281,7 +286,7 @@ def _setup_pillar(tech, direction, trend: float, rr_ratio: float, reasons) -> fl
         s += 0.15
         reasons.append((0.15 * w, "Volatility Squeeze (Persiapan Pergerakan Besar)"))
 
-    candle = tech.get("candlestick") or {}
+    candle = (tech.get("candlestick") or {}) if CANDLE_SCORING == "on" else {}
     sig = candle.get("signal", "NEUTRAL")
     rel = candle.get("reliability", "LOW")
     rel_mult = {"HIGH": 1.0, "MEDIUM": 0.7}.get(rel, 0.4)

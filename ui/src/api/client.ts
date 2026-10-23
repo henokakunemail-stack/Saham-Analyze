@@ -10,7 +10,7 @@ import {
   ScanStatus,
   BrokerSummaryData,
   AiModelsResponse,
-  PlanCheckpoint
+  ClosingReview
 } from '../types/stock';
 import { API_BASE } from './base';
 import { requestJson, TIMEOUT, ApiError } from './feedback';
@@ -78,10 +78,10 @@ export const api = {
     }
   },
 
-  /** Today's price vs each Top-10 / watchlist plan (polled: silent, null on failure). */
-  async getPlanCheckpoint(market: 'IDX' | 'US'): Promise<PlanCheckpoint | null> {
+  /** Analisa Penutupan: last session vs its plan + next plan with an honest assessment (silent, null on failure). */
+  async getClosingReview(market: 'IDX' | 'US'): Promise<ClosingReview | null> {
     try {
-      return await requestJson<PlanCheckpoint>(`${API_BASE}/plan/checkpoint?market=${market}`, { timeout: TIMEOUT.slow });
+      return await requestJson<ClosingReview>(`${API_BASE}/plan/closing-review?market=${market}`, { timeout: TIMEOUT.slow });
     } catch {
       return null;
     }

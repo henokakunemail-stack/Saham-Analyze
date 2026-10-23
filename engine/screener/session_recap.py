@@ -97,6 +97,9 @@ def recap(market: str, picks: Dict[str, str], fetch: Callable[[str], pd.DataFram
         df = fetch(ticker)
         if df is None or len(df) < 70 or "date" not in df.columns:
             return None
+        if final_fn(str(df["date"].iloc[-1])[:10]) is False:
+            # Session still trading: the recap is about the last *final* session, never a half-formed bar
+            df = df.iloc[:-1]
         bar = df.iloc[-1]
         lv = plan_fn(df.iloc[:-1].reset_index(drop=True))
         if not lv or not lv.get("entry_high"):
@@ -112,7 +115,7 @@ def recap(market: str, picks: Dict[str, str], fetch: Callable[[str], pd.DataFram
                 "recommended_entry": lv.get("recommended_entry"), "stop_loss": lv["stop_loss"],
                 "target_tp1": lv["target_tp1"], "target_tp2": lv["target_tp2"]}
 
-    key = (market, tuple(sorted(picks.items())))
+    key = (market, tuple(sorted(picks.items())), time.strftime("%Y-%m-%d %H"))
     hit = _cache.get(key)
     if hit and time.time() - hit[0] < CACHE_SEC:
         return hit[1]

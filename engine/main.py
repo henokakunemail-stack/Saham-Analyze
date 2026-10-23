@@ -40,7 +40,7 @@ from .routes import market as market_routes
 from . import market_breadth, sectors
 from .screener.actionability import assess as assess_action, rank_key
 from .screener.pipeline import analyze_frame
-from .screener import session_recap
+from .screener import session_recap, closing_review
 from .screener.scoring import PILLAR_WEIGHTS
 from .screener.fundamentals import fetch_and_evaluate_financials
 from .screener.broker_summary import fetch_and_evaluate_broker_summary, fetch_from_sectors_app
@@ -535,6 +535,24 @@ def _session_recap(market: str, ranked: List[Dict[str, Any]], picks: Dict[str, s
     except Exception as e:  # the recap is a convenience: never break the checkpoint
         print(f"[Recap] {e}")
         return None
+
+
+@app.get("/api/plan/closing-review")
+def plan_closing_review(market: str = Query("IDX", pattern="^(IDX|US)$"), top: int = 10):
+    """Analisa Penutupan: everything measured from the last final close — what the last session did
+    to the plans it traded on, and the plan for the next session with an honest assessment."""
+    ranked = get_screener_results(market=market)
+    if any(r.get("rank") for r in ranked):
+        ranked.sort(key=lambda r: r.get("rank") or 10**6)
+    watch = [normalize_ticker(w["ticker"], market) for w in get_watchlist()
+             if (w.get("market") or ("IDX" if str(w["ticker"]).endswith(".JK") else "US")) == market]
+    picks = {r["ticker"]: "Top 10" for r in ranked[:max(1, min(top, 20))]}
+    picks.update({t: "Watchlist" for t in watch if t not in picks})
+    recap = _session_recap(market, ranked, picks)
+    out = closing_review.build(ranked, recap, watch, top=max(1, min(top, 20)))
+    out["session"] = market_hours.session_status(market)
+    out["market_mode"] = next((r.get("market_mode") for r in ranked[:top] if r.get("market_mode")), None)
+    return out
 
 
 @app.get("/api/plan/checkpoint")

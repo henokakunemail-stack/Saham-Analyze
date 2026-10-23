@@ -143,7 +143,7 @@ export const MarketBreadthPanel: React.FC<Props> = ({ market, onSelectSector, se
         </button>
         <div className="flex items-center gap-2 min-w-0">
           {breadth?.latest && (
-            <span className={`text-[11px] font-semibold truncate ${LABEL_CLS[code]}`}>Breadth: {breadth.label}</span>
+            <span className={`text-[11px] font-semibold truncate ${LABEL_CLS[code]}`}>Kesehatan pasar: {breadth.label}</span>
           )}
           <button
             onClick={load}

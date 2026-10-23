@@ -51,8 +51,8 @@ const MarketSessions: React.FC = () => {
         );
       })}
       {breadth && (
-        <div className="text-[10px] leading-snug text-gray-400 pt-1 border-t border-borderMuted/60" title="Breadth pasar IDX: persentase saham di atas EMA50">
-          Breadth IDX: <span className="text-gray-200">{breadth}</span>
+        <div className="text-[10px] leading-snug text-gray-400 pt-1 border-t border-borderMuted/60" title="Kesehatan pasar IDX: persentase saham yang harganya di atas rata-rata 50 hari (EMA50)">
+          Kesehatan pasar IDX: <span className="text-gray-200">{breadth}</span>
         </div>
       )}
     </div>
