@@ -7,8 +7,9 @@ import { useToast } from './ui/Toast';
 const POLL_MS = 15000;
 
 const KIND_STYLE: Record<AlertKind, { Icon: React.FC<{ className?: string }>; color: string; toast: 'success' | 'warning' | 'info' }> = {
-  breakout: { Icon: Rocket, color: 'text-emerald-400', toast: 'success' },
-  strong_bullish: { Icon: TrendingUp, color: 'text-emerald-300', toast: 'success' },
+  // Chase signals (off by default): informational, not a green "go"
+  breakout: { Icon: Rocket, color: 'text-sky-300', toast: 'info' },
+  strong_bullish: { Icon: TrendingUp, color: 'text-sky-300', toast: 'info' },
   target_hit: { Icon: Target, color: 'text-sky-400', toast: 'success' },
   stop_loss: { Icon: ShieldAlert, color: 'text-rose-400', toast: 'warning' },
   outflow: { Icon: Waves, color: 'text-amber-400', toast: 'warning' },
@@ -163,8 +164,8 @@ export const NotificationCenter: React.FC<{
           <div className="max-h-[60vh] overflow-y-auto">
             {alerts.length === 0 ? (
               <div className="px-4 py-8 text-center text-[11px] text-gray-400 leading-relaxed">
-                Belum ada notifikasi. Alert muncul setelah scan bila ada breakout baru, saham naik ke STRONG BULLISH,
-                harga masuk zona beli (Watchlist / Top 10), atau saham Watchlist menyentuh Stop Loss / Target.
+                Belum ada notifikasi. Peringatan muncul saat harga turun ke harga beli (limit) saham Watchlist / Top 10,
+                atau saham Watchlist menyentuh cut loss / target. Peringatan breakout bisa dinyalakan di Pengaturan.
               </div>
             ) : (
               alerts.map((a) => {

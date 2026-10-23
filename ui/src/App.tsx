@@ -35,7 +35,8 @@ function mergeByTicker(prev: ScreenerItem[], fresh: ScreenerItem[]): ScreenerIte
 export const App: React.FC = () => {
   const toast = useToast();
   const [market, setMarket] = useState<'IDX' | 'US'>('IDX');
-  const [activeTab, setActiveTab] = useState<ActiveTab>('screener');
+  // Top 10 first: it answers "what can I do today" (plan, status); the screener is for digging
+  const [activeTab, setActiveTab] = useState<ActiveTab>('top10');
   const [screenerItems, setScreenerItems] = useState<ScreenerItem[]>([]);
   const [indices, setIndices] = useState<Record<string, MarketIndex>>({});
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);

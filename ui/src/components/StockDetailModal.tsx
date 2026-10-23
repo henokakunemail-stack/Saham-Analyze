@@ -13,7 +13,8 @@ import { GlossaryButton } from './help/GlossaryDrawer';
 import { PlainSummaryCard } from './help/PlainSummaryCard';
 import { SignalTrackRecord } from './SignalTrackRecord';
 import { AbnormalDaysChip } from './AbnormalDaysChip';
-import { ActionGates } from './ActionGates';
+import { ActionStatusBadge } from './ActionStatusBadge';
+import { DecisionStrip } from './DecisionStrip';
 import { PillarBars } from './PillarBars';
 import { fmtNum, fmtPct, fmtPrice, fmtSigned } from './help/format';
 import { GATE_LABELS, getTerm } from '../lib/glossary';
@@ -274,9 +275,10 @@ export const StockDetailModal: React.FC<Props> = ({
               {ticker}
               <span className="sr-only"> — detail analisa</span>
             </h2>
+            {analysis?.composite?.action && <ActionStatusBadge status={analysis.composite.action.status} />}
             {isConfirmed && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                ✅ KONFLUENSI LOLOS
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                Sinyal kuat (konfluensi)
                 <InfoTip term="confluence" />
               </span>
             )}
@@ -296,20 +298,20 @@ export const StockDetailModal: React.FC<Props> = ({
 
                 {/* Financial Health Header Pill */}
                 {isSpeculative ? (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                    ⚠️ SAHAM SPEKULATIF (RUGI/UTANG) <InfoTip term="speculative" className="ml-0.5" />
+                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                    ⚠️ Spekulatif (rugi/utang tinggi) <InfoTip term="speculative" className="ml-0.5" />
                   </span>
                 ) : financials?.health_grade === 'HEALTHY' ? (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                    🛡️ FINANSIAL SEHAT (SKOR {financials.health_score}/100)
+                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">
+                    🛡️ Keuangan sehat ({financials.health_score}/100)
                   </span>
                 ) : financials?.health_grade === 'DISTRESSED' ? (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                    ⚠️ KINERJA TERTEKAN
+                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                    ⚠️ Keuangan tertekan
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
-                    ⚖️ FINANSIAL STABIL
+                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                    ⚖️ Keuangan stabil
                   </span>
                 )}
 
@@ -412,6 +414,20 @@ export const StockDetailModal: React.FC<Props> = ({
                 </div>
               )}
 
+              {/* What to do today: status, reason, the order to place */}
+              {analysis && (
+                <DecisionStrip
+                  action={analysis.composite.action}
+                  reading={analysis.composite.reading}
+                  levels={analysis.composite.levels}
+                  buy={analysis.composite.recommended_entry ?? analysis.technical.recommended_entry}
+                  stop={analysis.composite.stop_loss}
+                  tp1={analysis.composite.target_tp1}
+                  tp2={analysis.composite.target_tp2}
+                  rr={analysis.composite.risk_reward_ratio}
+                />
+              )}
+
               {/* Ringkasan bahasa awam */}
               {analysis && <PlainSummaryCard analysis={analysis} />}
 
@@ -433,7 +449,7 @@ export const StockDetailModal: React.FC<Props> = ({
                     <div className="flex items-center gap-2">
                       <Bot className="w-4 h-4 text-purple-400" />
                       <h3 className="text-xs font-extrabold uppercase tracking-wider text-purple-200">
-                        Hasil Validasi Sinyal AI ({aiValidation.model_used || 'AI'}
+                        Pendapat AI ({aiValidation.model_used || 'AI'}
                         {aiValidation.elapsed_ms ? ` · ${(aiValidation.elapsed_ms / 1000).toFixed(1)} dtk` : ''})
                       </h3>
                     </div>
@@ -483,31 +499,22 @@ export const StockDetailModal: React.FC<Props> = ({
                         </div>
                       </div>
 
-                      {/* Right: Key Levels & Execution */}
+                      {/* Right: the AI's own levels — a second opinion, not the plan */}
                       <div className="space-y-2.5">
                         <div className="p-3 rounded-lg bg-black/30 border border-slate-800 space-y-2">
-                          <div className="text-[11px] font-bold text-gray-400 uppercase flex items-center gap-1.5">
-                            <Target className="w-3.5 h-3.5 text-amber-400" />
-                            <span>Rencana Eksekusi Harga (Trading Plan):</span>
+                          <div className="text-[11px] font-bold text-gray-400 flex items-center gap-1.5">
+                            <Target className="w-3.5 h-3.5 text-purple-300" />
+                            <span>Pendapat AI soal level (pembanding, bukan rencana resmi)</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-2 pt-1 font-mono">
-                            <div className="p-2 rounded bg-surface border border-borderMuted">
-                              <span className="text-[10px] text-gray-400 block">Zona beli:</span>
-                              <span className="text-white font-bold">{aiValidation.entry_zone || '-'}</span>
-                            </div>
-                            <div className="p-2 rounded bg-rose-500/10 border border-rose-500/20">
-                              <span className="text-[10px] text-rose-300 block">Cut loss:</span>
-                              <span className="text-rose-400 font-bold">{aiValidation.stop_loss || '-'}</span>
-                            </div>
-                            <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/20">
-                              <span className="text-[10px] text-emerald-300 block">TP1:</span>
-                              <span className="text-emerald-400 font-bold">{aiValidation.target_tp1 || '-'}</span>
-                            </div>
-                            <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/20">
-                              <span className="text-[10px] text-emerald-300 block">TP2:</span>
-                              <span className="text-emerald-400 font-bold">{aiValidation.target_tp2 || '-'}</span>
-                            </div>
-                          </div>
+                          <p className="font-mono text-[11px] text-gray-200 leading-relaxed">
+                            Zona {aiValidation.entry_zone || '-'} · cut loss{' '}
+                            <span className="text-rose-300">{aiValidation.stop_loss || '-'}</span> · target{' '}
+                            <span className="text-emerald-300">{aiValidation.target_tp1 || '-'}</span>
+                            {aiValidation.target_tp2 ? <> / {aiValidation.target_tp2}</> : null}
+                          </p>
+                          <p className="text-[11px] text-gray-400">
+                            Rencana resmi (yang diuji historis) ada di kotak "Keputusan hari ini" di atas.
+                          </p>
                           {aiValidation.key_catalyst && (
                             <div className="text-[11px] text-gray-300 pt-1">
                               <span className="text-gray-400">Katalis Utama:</span> {aiValidation.key_catalyst}
@@ -604,7 +611,7 @@ export const StockDetailModal: React.FC<Props> = ({
                     <div className="flex items-center gap-2">
                       <Compass className="w-4 h-4 text-emerald-400" />
                       <h3 className="text-xs font-bold uppercase tracking-wider text-white">
-                        Rencana Eksekusi Trading (Zona beli · TP1/TP2 · Cut loss)
+                        Dasar rencana: dari mana angka-angka ini
                       </h3>
                     </div>
                     {analysis.technical.candlestick && (
@@ -613,12 +620,15 @@ export const StockDetailModal: React.FC<Props> = ({
                           🕯️ {analysis.technical.candlestick.label}
                         </span>
                         {analysis.technical.candlestick.reliability && (
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
                             analysis.technical.candlestick.reliability === 'HIGH'
                               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                               : 'bg-slate-700 text-gray-300'
                           }`}>
-                            Reliabilitas: {analysis.technical.candlestick.reliability}
+                            Keandalan pola:{' '}
+                            {({ HIGH: 'tinggi', MEDIUM: 'sedang', LOW: 'rendah' } as Record<string, string>)[
+                              analysis.technical.candlestick.reliability
+                            ] ?? analysis.technical.candlestick.reliability}
                           </span>
                         )}
                       </div>
@@ -631,113 +641,49 @@ export const StockDetailModal: React.FC<Props> = ({
                     </p>
                   )}
 
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 font-mono">
-                    {/* Realistic Entry Zone */}
-                    <div className="p-3 rounded-xl bg-surface border border-cyan-500/30">
-                      <span className="text-[10px] text-gray-400 uppercase flex items-center gap-1">
-                        Zona beli: <InfoTip term="entry_zone" />
-                      </span>
-                      <span className="text-sm font-bold text-cyan-300 block">
-                        {analysis.technical.entry_low && analysis.technical.entry_high
-                          ? `${formatCurrency(analysis.technical.entry_low)} – ${formatCurrency(analysis.technical.entry_high)}`
-                          : formatCurrency(analysis.technical.recommended_entry || analysis.composite.recommended_entry)}
-                      </span>
-                      <span
-                        className="text-[10px] text-cyan-300/80 block mt-0.5 truncate"
-                        title="Uji historis mengasumsikan order beli limit di harga saran, bukan di batas atas zona"
-                      >
-                        Harga saran (limit) {formatCurrency(analysis.technical.recommended_entry || analysis.composite.recommended_entry)}
-                      </span>
-                    </div>
+                  {/* The numbers themselves are in "Keputusan hari ini" at the top; here: where they come from */}
+                  <LevelBasis levels={analysis.composite.levels} withNow={false} />
+                  {analysis.technical.atr14 ? (
+                    <p className="text-[11px] text-gray-400 flex items-center gap-1">
+                      Gerak harian normal (ATR 14): {fmtNum(analysis.technical.atr14, 2)} <InfoTip term="atr" />
+                    </p>
+                  ) : null}
 
-                    {/* Cut Loss */}
-                    <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30">
-                      <span className="text-[10px] text-rose-300 uppercase flex items-center gap-1">
-                        ▼ Cut loss: <InfoTip term="stop_loss" />
-                      </span>
-                      <span className="text-sm font-bold text-rose-400">
-                        {formatCurrency(analysis.composite.stop_loss)}
-                      </span>
-                      <span className="text-[10px] text-rose-400 flex items-center gap-1 mt-0.5">
-                        {analysis.technical.atr14 ? `ATR(14): ${fmtNum(analysis.technical.atr14, 2)}` : 'Batas risiko maks.'}
-                        {analysis.technical.atr14 ? <InfoTip term="atr" /> : null}
-                      </span>
-                    </div>
-
-                    {/* TP 1 */}
-                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-                      <span className="text-[10px] text-emerald-300 uppercase flex items-center gap-1">
-                        ▲ TP1: <InfoTip term="take_profit" />
-                      </span>
-                      <span className="text-sm font-bold text-emerald-400">
-                        {formatCurrency(analysis.composite.target_tp1)}
-                      </span>
-                      <span className="text-[10px] text-emerald-400 block mt-0.5">Target Swing Terdekat</span>
-                    </div>
-
-                    {/* TP 2 */}
-                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-                      <span className="text-[10px] text-emerald-300 uppercase block">▲ TP2:</span>
-                      <span className="text-sm font-bold text-emerald-400">
-                        {formatCurrency(analysis.composite.target_tp2)}
-                      </span>
-                      <span className="text-[10px] text-emerald-400 block mt-0.5">Target Rally Lanjutan</span>
-                    </div>
-
-                    {/* Risk / Reward */}
-                    <div className="p-3 rounded-xl bg-surface border border-borderMuted col-span-2 md:col-span-1">
-                      <span className="text-[10px] text-gray-400 uppercase flex items-center gap-1">
-                        Risk / Reward (R:R): <InfoTip term="risk_reward" />
-                      </span>
-                      <span className="text-sm font-bold text-amber-400">
-                        1 : {analysis.composite.risk_reward_ratio ? fmtNum(analysis.composite.risk_reward_ratio, 2) : '-'}
-                      </span>
-                      <span className="text-[10px] text-gray-400 block mt-0.5">
-                        {(analysis.composite.risk_reward_ratio ?? 0) >= 2
-                          ? 'Baik (≥ 1 : 2)'
-                          : (analysis.composite.risk_reward_ratio ?? 0) >= 1.4
-                          ? 'Cukup (≥ 1 : 1,4)'
-                          : 'Kurang menarik'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Gerbang konfluensi: ✓/✗ (tidak hanya warna) */}
+                  {/* Signal strength (confluence) is a different question from "may I buy": keep it folded */}
                   {analysis.composite.confluence_gates && Object.keys(analysis.composite.confluence_gates).length > 0 && (
-                    <div className="space-y-1.5">
-                      <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold flex items-center gap-1">
-                        Gerbang konfluensi (kekuatan sinyal): {analysis.composite.confluence_score ?? 0}/6 lolos
-                        <InfoTip term="confluence" />
+                    <details className="rounded-lg border border-borderMuted/70 bg-[#090D16]/50 px-3 py-1.5">
+                      <summary className="cursor-pointer select-none text-[11px] font-semibold text-gray-300 hover:text-white">
+                        Kekuatan sinyal (konfluensi): {analysis.composite.confluence_score ?? 0}/6 gerbang lolos
+                      </summary>
+                      <div className="pt-2 space-y-1.5">
+                        <p className="text-[11px] text-gray-400 flex items-center gap-1">
+                          Mengukur seberapa banyak faktor yang searah — bukan izin membeli; itu ditentukan status di atas.
+                          <InfoTip term="confluence" />
+                        </p>
+                        <ul className="flex flex-wrap gap-1.5">
+                          {Object.entries(analysis.composite.confluence_gates).map(([key, ok]) => (
+                            <li
+                              key={key}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-semibold ${
+                                ok
+                                  ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                                  : 'bg-slate-800 text-gray-300 border-slate-700'
+                              }`}
+                            >
+                              <span aria-hidden="true">{ok ? '✓' : '✗'}</span>
+                              <span className="sr-only">{ok ? 'Lolos:' : 'Belum lolos:'}</span>
+                              {GATE_LABELS[key] ?? key}
+                              <InfoTip term={key} />
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                      <p className="text-[10px] text-gray-500">
-                        Gerbang konfluensi mengukur seberapa kuat sinyalnya; syarat eksekusi di bawah menentukan apakah rencana
-                        layak dibeli sekarang.
-                      </p>
-                      <ul className="flex flex-wrap gap-1.5">
-                        {Object.entries(analysis.composite.confluence_gates).map(([key, ok]) => (
-                          <li
-                            key={key}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-semibold ${
-                              ok
-                                ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                                : 'bg-rose-500/10 text-rose-300 border-rose-500/30'
-                            }`}
-                          >
-                            <span aria-hidden="true">{ok ? '✓' : '✗'}</span>
-                            <span className="sr-only">{ok ? 'Lolos:' : 'Belum lolos:'}</span>
-                            {GATE_LABELS[key] ?? key}
-                            <InfoTip term={key} />
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    </details>
                   )}
-                  <LevelBasis levels={analysis.composite.levels} />
-                  {analysis.composite.action && <ActionGates action={analysis.composite.action} />}
                   {analysis.composite.pillar_values && Object.keys(analysis.composite.pillar_values).length > 0 && (
                     <div className="space-y-1">
-                      <div className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
-                        Komponen skor
+                      <div className="text-[11px] uppercase tracking-wider text-gray-400 font-bold flex items-center gap-1">
+                        Komponen skor <InfoTip term="composite_score" />
                         {analysis.composite.raw_score !== undefined && analysis.composite.raw_score !== analysis.composite.score && (
                           <span className="normal-case font-normal text-gray-400">
                             {' '}· skor asli {analysis.composite.raw_score}, dipotong ke {analysis.composite.score} oleh rem pasar
@@ -747,7 +693,7 @@ export const StockDetailModal: React.FC<Props> = ({
                       <PillarBars values={analysis.composite.pillar_values} weights={analysis.composite.pillar_weights} />
                     </div>
                   )}
-                  <p className="text-[10px] text-gray-500">
+                  <p className="text-[11px] text-gray-400">
                     Level dihitung dari support/resistance nyata dan dibulatkan ke fraksi harga bursa — hitungan mekanis,
                     bukan saran beli/jual.
                   </p>

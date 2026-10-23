@@ -480,7 +480,9 @@ DIRECTION_KEYS = ("direction", "direction_label", "trend_regime", "trend_confide
                   # Fase 1-4: action status, ranking, raw score, pillars, abnormal days, sector
                   "action", "rank", "raw_score", "pillar_values", "abnormal_recent", "sector", "sector_rank",
                   # shown as badges in the screener/Top 10 (were lost when rows came from the cache)
-                  "vsa_signal", "vsa_label", "vsa_desc", "spread_ratio", "confluence_gates")
+                  "vsa_signal", "vsa_label", "vsa_desc", "spread_ratio", "confluence_gates",
+                  # +1 / -1 / 0 per entry of `reasons` (supporting / against / note)
+                  "reason_signs")
 
 def save_screener_result(res: Dict[str, Any]):
     with get_connection() as conn:

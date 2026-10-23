@@ -542,14 +542,17 @@ def compute_composite_score(
     if market_mode in ("CRASH", "BEARISH"):
         # The market condition outranks any single-stock argument: always show it first
         reasons.sort(key=lambda r: not (r[1].startswith("⛔") or r[1].startswith("🐻")))
-    reason_texts = [text for _, text in reasons]
     is_confirmed = bool(confluence["is_confirmed_breakout"])
     if market_mode == "CRASH":
         # No "confirmed" setups while the whole market is in forced selling
         is_confirmed = False
-        reason_texts = [t for t in reason_texts if not t.startswith("🚀 Konfluensi")]
+        reasons = [r for r in reasons if not r[1].startswith("🚀 Konfluensi")]
     if is_speculative:
-        reason_texts.insert(0, "⚠️ Saham Spekulatif: Kinerja keuangan rugi / utang tinggi")
+        reasons.insert(0, (-0.3, "⚠️ Saham Spekulatif: Kinerja keuangan rugi / utang tinggi"))
+    reason_texts = [text for _, text in reasons]
+    # Sign of each reason (+1 supports a rise, -1 argues against, 0 neutral note), so the UI never
+    # puts a green check next to "⛔ Pasar Krisis" or "Uang Keluar Deras"
+    reason_signs = [(impact > 0) - (impact < 0) for impact, _ in reasons]
 
     return {
         "score": final_score,
@@ -557,6 +560,7 @@ def compute_composite_score(
         "badge_text": badge_text,
         "money_flow_status": flow_status,
         "reasons": reason_texts[:5],
+        "reason_signs": reason_signs[:5],
         "pillars": {k: round(v, 2) for k, v in pillars.items()},
         "raw_score": raw_score,
         "pillar_values": {k: round(v, 3) for k, v in pillars.items()},

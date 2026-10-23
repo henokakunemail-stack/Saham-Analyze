@@ -299,6 +299,16 @@ export function summarizeAnalysis(a: SummaryInput): PlainSummary {
     }
   }
 
+  // The summary describes conditions; the action status decides. A green "kondisi mendukung"
+  // must not sit above a TUNGGU/HINDARI decision without saying why it is not a buy yet.
+  const action = c.action;
+  if (action && action.status !== 'LAYAK') {
+    if (tone === 'positive') tone = 'cautious';
+    if (action.status === 'HINDARI' && tone !== 'negative') tone = 'negative';
+    const why = action.reasons?.[0];
+    conclusion += ` Belum layak dibeli sekarang (status ${action.status}${why ? `: ${why}` : ''}).`;
+  }
+
   return {
     tone,
     headline,

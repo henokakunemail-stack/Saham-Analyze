@@ -132,7 +132,7 @@ def aggregate_news_sentiment(articles: List[Dict[str, Any]]) -> Dict[str, Any]:
         return {
             "sentiment_score": 0.0,
             "sentiment_label": "NEUTRAL",
-            "catalyst": "Nol Berita Baru",
+            "catalyst": "Tidak ada berita baru",
             "article_count": 0,
             "headlines": [],
         }
@@ -167,7 +167,7 @@ def aggregate_news_sentiment(articles: List[Dict[str, Any]]) -> Dict[str, Any]:
     return {
         "sentiment_score": round(avg, 2),
         "sentiment_label": label,
-        "catalyst": top_cat or ("Tidak Ada Katalis Khusus" if label != "NEGATIVE" else "Berita Cenderung Negatif"),
+        "catalyst": top_cat or ("Tidak ada katalis khusus" if label != "NEGATIVE" else "Berita cenderung negatif"),
         "article_count": len(articles),
         "headlines": headlines[:6],
     }

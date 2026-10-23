@@ -67,21 +67,21 @@ def read_bar(lv: Dict[str, Any], bar: Dict[str, float]) -> Tuple[str, str, bool]
     filled = lo <= rec
     if lo <= sl:
         if filled:
-            return "STOP", (f"Turun ke harga saran {_fmt(rec)} lalu terus ke cut loss {_fmt(sl)} — "
-                            f"posisi dari harga saran kena cut loss"), True
+            return "STOP", (f"Turun ke harga beli {_fmt(rec)} lalu terus ke cut loss {_fmt(sl)} — "
+                            f"posisi yang terbeli kena cut loss"), True
         return "STOP", f"Menyentuh cut loss {_fmt(sl)} — rencana batal", False
     for code, tp, name in (("TP2", tp2, "TP2"), ("TP1", tp1, "TP1")):
         if h >= tp:
             if filled:
-                return code, (f"Sempat turun ke harga saran {_fmt(rec)} (terendah {_fmt(lo)}) dan naik ke "
+                return code, (f"Sempat turun ke harga beli {_fmt(rec)} (terendah {_fmt(lo)}) dan naik ke "
                               f"{name} {_fmt(tp)} — urutan dalam hari tidak diketahui"), True
-            return code, (f"Naik ke {name} {_fmt(tp)} tanpa turun ke harga saran {_fmt(rec)} — "
+            return code, (f"Naik ke {name} {_fmt(tp)} tanpa turun ke harga beli {_fmt(rec)} — "
                           f"order limit tidak terisi"), False
     if filled:
-        return "FILLED", (f"Harga saran {_fmt(rec)} tercapai (terendah {_fmt(lo)}), tutup {_fmt(c)} — "
+        return "FILLED", (f"Harga beli {_fmt(rec)} tercapai (terendah {_fmt(lo)}), tutup {_fmt(c)} — "
                           f"posisi berjalan: cut loss {_fmt(sl)}, TP1 {_fmt(tp1)}"), True
     if lo <= eh:
-        return "ZONE", (f"Masuk zona beli (terendah {_fmt(lo)}) tetapi tidak sampai harga saran {_fmt(rec)} — "
+        return "ZONE", (f"Masuk zona beli (terendah {_fmt(lo)}) tetapi tidak sampai harga beli {_fmt(rec)} — "
                         f"order limit belum terisi"), False
     return "ABOVE", f"Tidak turun ke zona beli (terendah {_fmt(lo)}, zona {_fmt(el)}–{_fmt(eh)}) — tidak ada entry", False
 

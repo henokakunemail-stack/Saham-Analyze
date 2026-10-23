@@ -35,6 +35,10 @@ KINDS: Dict[str, str] = {
     "outflow": "Watchlist: uang keluar masif",
     "entry_zone": "Harga masuk zona beli",
 }
+# Off unless the user turns them on: they fire for every scanned stock, and a fresh breakout /
+# verdict upgrade is a chase signal the pullback strategy does not act on (54 breakout alerts in
+# two days in one real install — noise that buries the alerts that matter)
+DEFAULT_OFF = ("breakout", "strong_bullish")
 PREFS_KEY = "alert_prefs"
 COOLDOWN = timedelta(hours=12)  # same ticker+kind is not repeated within this window
 MAX_ALERTS_KEPT = 300
@@ -99,7 +103,7 @@ def get_prefs() -> Dict[str, Any]:
         raw = {}
     kinds_raw = raw.get("kinds") if isinstance(raw.get("kinds"), dict) else {}
     return {
-        "kinds": {k: bool(kinds_raw.get(k, True)) for k in KINDS},
+        "kinds": {k: bool(kinds_raw.get(k, k not in DEFAULT_OFF)) for k in KINDS},
         "os_toast": bool(raw.get("os_toast", False)),
         "labels": dict(KINDS),
     }
@@ -242,16 +246,16 @@ def detect_entry_zone(
         rec = _f(lv.get("recommended_entry")) or eh
         zone = f"{_fmt_price(el, market)}–{_fmt_price(eh, market)}"
         if price <= rec:
-            msg = f"Harga {_fmt_price(price, market)} mencapai harga saran beli {_fmt_price(rec, market)} (zona {zone})."
+            msg = f"Harga {_fmt_price(price, market)} mencapai harga beli (limit) {_fmt_price(rec, market)} (zona {zone})."
         else:
-            msg = (f"Harga sempat {_fmt_price(_f(low), market)} mencapai harga saran beli {_fmt_price(rec, market)} "
+            msg = (f"Harga sempat {_fmt_price(_f(low), market)} mencapai harga beli (limit) {_fmt_price(rec, market)} "
                    f"(zona {zone}), kini {_fmt_price(price, market)}.")
         msg += f" Cut loss {_fmt_price(sl, market)}"
         tp1 = _f(lv.get("target_tp1"))
         msg += f", TP1 {_fmt_price(tp1, market)}." if tp1 > 0 else "."
         if status:
             msg += f" Status: {status}."
-        out.append({"ticker": t, "kind": "entry_zone", "title": f"{t}: mencapai harga saran beli", "message": msg,
+        out.append({"ticker": t, "kind": "entry_zone", "title": f"{t}: mencapai harga beli (limit)", "message": msg,
                     "plan": {"entry_low": el, "entry_high": eh, "entry_as_of": as_of}})
     return out
 

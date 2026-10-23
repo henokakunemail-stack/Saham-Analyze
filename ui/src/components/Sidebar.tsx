@@ -70,16 +70,14 @@ export const Sidebar: React.FC<Props> = ({ activeTab, onSelectTab, watchlistCoun
     {
       id: 'top10' as ActiveTab,
       label: 'Top 10 Potensial',
-      desc: 'Skor Tertinggi & Level Teknis',
+      desc: 'Rencana beli · cut loss · target',
       icon: TrendingUp,
-      badge: 'TOP',
     },
     {
       id: 'history' as ActiveTab,
       label: 'Histori Prediksi',
-      desc: 'Uji Akurasi Sinyal (Backtest)',
+      desc: 'Rekam jejak & uji historis',
       icon: History,
-      badge: 'REC',
     },
     {
       id: 'inflow' as ActiveTab,
@@ -132,7 +130,7 @@ export const Sidebar: React.FC<Props> = ({ activeTab, onSelectTab, watchlistCoun
                   </div>
                 </div>
                 {item.badge !== undefined && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-gray-300 border border-slate-700">
                     {item.badge}
                   </span>
                 )}

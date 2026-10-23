@@ -148,7 +148,7 @@ Jadwal otomatis (WIB):
 |---|---|
 | Rencana untuk besok | setelah scan penutupan (±16:50–17:50) — sekali per hari bursa |
 | Cek tengah hari | saat jeda siang (Senin–Kamis 12:00–13:30, Jumat 11:30–14:00) |
-| Peringatan langsung | setiap scan saat sesi berjalan (±5 menit): harga turun ke **harga saran beli** / sentuh TP1 (hanya bila harga saran sempat tercapai) / sentuh cut loss — sekali per saham per hari, untuk saham di rencana terakhir + watchlist; saham HINDARI tidak diberi peringatan beli |
+| Peringatan langsung | setiap scan saat sesi berjalan (±5 menit): harga turun ke **harga beli (limit)** / sentuh TP1 (hanya bila harga beli sempat tercapai) / sentuh cut loss — sekali per saham per hari, untuk saham di rencana terakhir + watchlist; saham HINDARI tidak diberi peringatan beli |
 | Rekam jejak mingguan | Jumat, setelah rencana |
 
 Perintah di grup: `/top10`, `/cek BBCA`, `/rencana`, `/tengahhari`, `/pasar`, `/rekam`, `/bantuan`.

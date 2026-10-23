@@ -63,7 +63,7 @@ def _plan_line(lv: Dict[str, Any], market: str) -> str:
     rr = lv.get("risk_reward_ratio")
     rec = lv.get("recommended_entry")
     line = (f"Beli {num(lv.get('entry_low'), market)}–{num(lv.get('entry_high'), market)}"
-            + (f" (saran {num(rec, market)})" if rec else "")
+            + (f" (beli limit {num(rec, market)})" if rec else "")
             + f" · TP1 {num(lv.get('target_tp1'), market)} · CL {num(lv.get('stop_loss'), market)}")
     if rr is not None:
         line += f" · R:R {dec(rr)}"
@@ -119,7 +119,7 @@ def midday(rows: List[Dict[str, Any]], market: str, date: str, session_note: str
 
 
 ALERT_TITLES = {
-    "entry_zone": ("🟢", "mencapai harga saran beli"),
+    "entry_zone": ("🟢", "mencapai harga beli (limit)"),
     "tp": ("🎯", "menyentuh TP1"),
     "stop": ("🔴", "menyentuh cut loss"),
 }
@@ -130,7 +130,7 @@ def alert(kind: str, ticker: str, market: str, live: Dict[str, Any], lv: Dict[st
     lines = [f"{icon} <b>{code(ticker)} {title}</b> — harga {num(live.get('price'), market)}",
              f"Rencana: {_plan_line(lv, market)}"]
     if kind == "entry_zone":
-        lines.append(f"Harga saran {num(lv.get('recommended_entry'), market)} tercapai — sesuai rencana bila ingin "
+        lines.append(f"Harga beli {num(lv.get('recommended_entry'), market)} tercapai — sesuai rencana bila ingin "
                      "masuk; pasang cut loss sejak awal.")
     elif kind == "tp":
         lines.append("Punya posisi: jual separuh, naikkan cut loss ke harga beli, sisanya incar TP2. Belum punya: jangan dikejar.")

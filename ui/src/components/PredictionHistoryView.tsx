@@ -32,8 +32,8 @@ const STATUS: Record<string, { text: string; cls: string }> = {
   EXPIRED: { text: '⌛ Habis waktu', cls: 'bg-slate-500/15 text-slate-300 border-slate-500/30' },
   IN_PROGRESS: { text: '⏳ Berjalan', cls: 'bg-amber-500/10 text-amber-300 border-amber-500/30' },
   WAITING_ENTRY: { text: '🕓 Menunggu zona beli', cls: 'bg-sky-500/10 text-sky-300 border-sky-500/30' },
-  NOT_FILLED: { text: '⊘ Tak sempat masuk zona', cls: 'bg-slate-500/10 text-gray-400 border-slate-600/40' },
-  CANCELLED: { text: '✖ Batal (buka di bawah CL)', cls: 'bg-slate-500/10 text-gray-400 border-slate-600/40' },
+  NOT_FILLED: { text: '⊘ Harga beli tidak tersentuh', cls: 'bg-slate-500/10 text-gray-400 border-slate-600/40' },
+  CANCELLED: { text: '✖ Batal (dibuka di bawah cut loss)', cls: 'bg-slate-500/10 text-gray-400 border-slate-600/40' },
 };
 
 const readTab = (): Tab => {
@@ -296,7 +296,7 @@ const PredictionsTab: React.FC<Props> = ({ market, onSelectTicker }) => {
             </table>
           </div>
           <p className="text-[10px] text-gray-500">
-            Dianggap terbeli bila harga turun ke harga saran dalam 5 hari bursa. Cut loss diperiksa sebelum TP; hasil tanpa
+            Dianggap terbeli bila harga turun ke harga beli dalam 5 hari bursa. Cut loss diperiksa sebelum TP; hasil tanpa
             biaya transaksi.
             <button onClick={backfill} disabled={backfilling} className="underline hover:text-gray-300 ml-1">
               {backfilling ? 'membuat snapshot…' : `buat snapshot ${BACKFILL_DAYS} hari lalu`}
@@ -346,15 +346,18 @@ const Row: React.FC<{
         <td className="py-2.5 px-3 text-gray-300">
           {zone ? (
             <>
-              Beli <span className="font-mono">{price(it.entry_low)}–{price(it.entry_high)}</span>
+              Beli limit <span className="font-mono text-cyan-300">{price(it.recommended_entry ?? it.entry_high)}</span>
+              <div className="text-[10px] text-gray-400">
+                zona <span className="font-mono">{price(it.entry_low)}–{price(it.entry_high)}</span>
+              </div>
             </>
           ) : (
             <>
               Harga <span className="font-mono">{price(it.price_at_prediction)}</span>
             </>
           )}
-          <div className="text-[10px] text-gray-500">
-            TP1 <span className="font-mono text-emerald-300/80">{price(it.target_tp1)}</span> · CL{' '}
+          <div className="text-[10px] text-gray-400">
+            TP1 <span className="font-mono text-emerald-300/80">{price(it.target_tp1)}</span> · cut loss{' '}
             <span className="font-mono text-rose-300/80">{price(it.stop_loss)}</span>
           </div>
         </td>

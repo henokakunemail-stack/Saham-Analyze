@@ -276,7 +276,8 @@ def plan_position(levels: Dict[str, Any], price: float, high: Optional[float] = 
     elif price < el:
         code, label = "TESTING_SUPPORT", "Di antara cut loss dan zona beli — support sedang diuji"
     elif price <= eh:
-        code, label = "IN_ZONE", "Di zona beli — sesuai rencana"
+        # Where the price is, not a buy call: whether to buy is the status's job (LAYAK/TUNGGU/HINDARI)
+        code, label = "IN_ZONE", "Di zona beli"
     elif price >= tp2:
         code, label = "AT_TP2", "Sudah di TP2 — punya posisi: ambil untung; belum punya: jangan dikejar"
     elif price >= tp1:

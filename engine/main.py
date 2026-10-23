@@ -230,6 +230,7 @@ def _analyze_single_ticker(ticker: str, market: str, all_news: List[Dict[str, An
             "verdict": composite.get("verdict", "NEUTRAL"),
             "badge_text": composite.get("badge_text", "⚪ KONSOLIDASI"),
             "reasons": composite.get("reasons", []),
+            "reason_signs": composite.get("reason_signs", []),
             "is_confirmed_breakout": composite.get("is_confirmed_breakout", False),
             "confluence_score": composite.get("confluence_score", 0),
             "confluence_gates": composite.get("confluence_gates", {}),
@@ -268,6 +269,7 @@ def _analyze_single_ticker(ticker: str, market: str, all_news: List[Dict[str, An
 
         if (result.get("screen") or {}).get("illiquid"):
             result["reasons"] = ["⚠️ Likuiditas rendah — sinyal teknikal kurang andal"] + list(result.get("reasons", []))[:4]
+            result["reason_signs"] = [-1] + list(result.get("reason_signs", []))[:4]
         save_screener_result(result)
         return result
     except Exception as e:
@@ -555,6 +557,8 @@ def plan_checkpoint(market: str = Query("IDX", pattern="^(IDX|US)$"), top: int =
                 "message": "Bursa tidak sedang berjalan — rencana berlaku untuk sesi berikutnya.",
                 "recap": _session_recap(market, ranked, picks)}
 
+    statuses = {r["ticker"]: (r.get("action") or {}).get("status") for r in ranked}
+
     def one(ticker: str, source: str) -> Optional[Dict[str, Any]]:
         df = fetch_stock_ohlcv(ticker, period="1y")
         if df.empty:
@@ -564,6 +568,8 @@ def plan_checkpoint(market: str = Query("IDX", pattern="^(IDX|US)$"), top: int =
         if not live:  # no partial bar for today yet (holiday, or the feed has not caught up)
             return None
         return {"ticker": ticker, "source": source, "as_of": lv.get("as_of"), **live,
+                # "Di zona beli" must not read as "buy" for a stock that is not LAYAK
+                "action_status": statuses.get(ticker),
                 "entry_low": lv["entry_low"], "entry_high": lv["entry_high"], "stop_loss": lv["stop_loss"],
                 "recommended_entry": lv.get("recommended_entry"),
                 "target_tp1": lv["target_tp1"], "target_tp2": lv["target_tp2"]}

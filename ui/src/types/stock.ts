@@ -74,7 +74,7 @@ export interface NewsHeadline {
 
 export interface StockReadingPlan {
   stance: 'LAYAK_DIPERTIMBANGKAN' | 'TUNGGU_PEMICU' | 'PANTAU' | 'TUNGGU_PULLBACK' | 'TAHAN' | 'HINDARI' | 'NETRAL'
-    | 'LEWAT' | 'BATAL' | 'JANGAN_KEJAR';
+    | 'LEWAT' | 'BATAL' | 'JANGAN_KEJAR' | 'BELUM_LAYAK';
   /** The reading before today's live position overrode it (session only). */
   base_stance?: string;
   headline: string;
@@ -247,6 +247,8 @@ export interface ScreenerItem {
   verdict: string;
   badge_text: string;
   reasons: string[];
+  /** +1 supports a rise, -1 argues against, 0 note — one per `reasons` entry (newer engines). */
+  reason_signs?: number[];
   is_confirmed_breakout?: boolean;
   confluence_score?: number;
   confluence_gates?: Record<string, boolean>;
@@ -373,6 +375,7 @@ export interface StockAnalysis {
     verdict: string;
     badge_text: string;
     reasons: string[];
+    reason_signs?: number[];
     is_confirmed_breakout?: boolean;
     confluence_score?: number;
     confluence_gates?: Record<string, boolean>;
@@ -394,6 +397,7 @@ export interface StockAnalysis {
     pillar_values?: Record<string, number>;
     pillar_weights?: Record<string, number>;
     action?: ActionInfo | null;
+    reading?: StockReadingPlan | null;
   };
   abnormal_recent?: AbnormalDay[];
   sector?: string | null;
@@ -606,6 +610,8 @@ export interface ScanStatus {
 export interface PlanCheckpointRow extends PlanPosition {
   ticker: string;
   source: 'Top 10' | 'Watchlist';
+  /** LAYAK / TUNGGU / HINDARI of the stock's scan row (newer engines). */
+  action_status?: string | null;
   as_of?: string | null;
   entry_low: number;
   entry_high: number;

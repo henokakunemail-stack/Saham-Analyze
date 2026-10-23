@@ -3,7 +3,7 @@
 Pembanding untuk semua perubahan aturan di Fase 1–5. Dihitung dengan `engine/screener/plan_sim.py`
 melalui `compute_backtest("IDX", 10)`.
 
-**Aturan simulasi:** rencana dibuat dari penutupan hari itu (tanpa melihat masa depan); order beli di harga saran
+**Aturan simulasi:** rencana dibuat dari penutupan hari itu (tanpa melihat masa depan); order beli di harga beli
 berlaku 5 hari bursa; batal bila harga dibuka di bawah cut loss sebelum terisi; setelah terisi diberi 10 hari bursa;
 cut loss diperiksa sebelum TP; TP tidak dihitung pada hari pengisian; setelah TP1 masih boleh naik ke TP2.
 **Tanpa biaya transaksi** (keputusan pengguna). Sentimen berita & fundamental tidak ikut (tidak ada riwayat).

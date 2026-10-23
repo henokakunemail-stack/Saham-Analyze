@@ -66,15 +66,15 @@ def test_enters_zone_from_above_watchlist():
     got = _entry_alerts()
     assert len(got) == 1
     a = got[0]
-    assert a["ticker"] == "PTBA.JK" and a["title"] == "PTBA.JK: mencapai harga saran beli"
-    assert a["message"] == "Harga 2.970 mencapai harga saran beli 2.975 (zona 2.930–3.020). Cut loss 2.790, TP1 3.150."
+    assert a["ticker"] == "PTBA.JK" and a["title"] == "PTBA.JK: mencapai harga beli (limit)"
+    assert a["message"] == "Harga 2.970 mencapai harga beli (limit) 2.975 (zona 2.930–3.020). Cut loss 2.790, TP1 3.150."
 
 
 def test_intraday_dip_then_bounce_still_fires():
     add_watchlist("PTBA.JK", "", "IDX")
     notifications.on_scan_complete("IDX", [_row("PTBA.JK", price=3060, day_low=2970)], now=T0)
     msg = _entry_alerts()[0]["message"]
-    assert msg.startswith("Harga sempat 2.970 mencapai harga saran beli 2.975 (zona 2.930–3.020), kini 3.060.")
+    assert msg.startswith("Harga sempat 2.970 mencapai harga beli (limit) 2.975 (zona 2.930–3.020), kini 3.060.")
 
 
 def test_gap_below_stop_does_not_fire():

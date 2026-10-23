@@ -98,7 +98,7 @@ def test_alerts_go_out_after_a_scan(sent):
     service.on_scan_complete("IDX", rows, [])
     service.on_scan_complete("IDX", rows, [])
     alerts = [t for k, t, _ in sent if k == "alerts"]
-    assert len(alerts) == 1 and "PTBA mencapai harga saran beli" in alerts[0]
+    assert len(alerts) == 1 and "PTBA mencapai harga beli (limit)" in alerts[0]
 
 
 def test_only_the_registered_group_gets_answers(sent):

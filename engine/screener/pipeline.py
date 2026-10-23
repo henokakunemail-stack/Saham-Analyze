@@ -44,6 +44,11 @@ def align_reading(reading: Optional[Dict[str, Any]], action: Dict[str, Any]) -> 
     status, reasons = action.get("status"), action.get("reasons") or []
     if status == "HINDARI" and out.get("stance") != "HINDARI":
         out.update(stance="HINDARI", headline=reasons[0] if reasons else out.get("headline"))
+    elif status == "TUNGGU" and out.get("stance") == "HINDARI":
+        # The pullback reading rules the stock out (no uptrend, speculative, ...) but no execution
+        # gate fails outright: the card must not show "Hindari" next to a TUNGGU status
+        out.update(stance="BELUM_LAYAK", base_stance="HINDARI",
+                   headline=f"Belum layak beli — cukup dipantau. {reading.get('headline') or ''}".strip())
     elif status == "TUNGGU" and out.get("stance") == "LAYAK_DIPERTIMBANGKAN":
         out.update(stance="TUNGGU_PEMICU",
                    headline=f"Syarat eksekusi belum terpenuhi — {reasons[0]}" if reasons else out.get("headline"))

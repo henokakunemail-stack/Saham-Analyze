@@ -3,6 +3,7 @@ import { ClipboardCheck, Coffee, MapPin, RefreshCw } from 'lucide-react';
 import { api } from '../api/client';
 import type { PlanCheckpoint as Checkpoint, RecapOutcome, SessionRecap } from '../types/stock';
 import { POSITION_CLS } from './FlowSummaryCard';
+import { ActionStatusBadge } from './ActionStatusBadge';
 import { clickableProps, FOCUS_RING } from '../lib/a11y';
 
 const fmt = (v?: number | null) =>
@@ -22,7 +23,7 @@ const OUTCOME: Record<RecapOutcome, { label: string; count: string; cls: string 
   STOP: { label: 'Kena cut loss', count: 'kena cut loss', cls: 'text-rose-300' },
   TP2: { label: 'Mencapai TP2', count: 'mencapai TP2', cls: 'text-emerald-300' },
   TP1: { label: 'Mencapai TP1', count: 'mencapai TP1', cls: 'text-emerald-300' },
-  FILLED: { label: 'Harga saran terisi', count: 'harga saran terisi', cls: 'text-cyan-300' },
+  FILLED: { label: 'Harga beli terisi', count: 'harga beli terisi', cls: 'text-cyan-300' },
   ZONE: { label: 'Masuk zona beli', count: 'masuk zona beli', cls: 'text-sky-300' },
   ABOVE: { label: 'Tidak turun ke zona', count: 'tidak turun ke zona', cls: 'text-gray-400' },
 };
@@ -59,7 +60,7 @@ const RecapView: React.FC<{
               <th className="py-1 pr-3 font-semibold text-right">Tutup</th>
               <th className="py-1 pr-3 font-semibold">Hasil vs rencana</th>
               <th className="py-1 pr-3 font-semibold text-right">Rentang sesi</th>
-              <th className="py-1 font-semibold text-right">Rencana (saran · CL · TP1)</th>
+              <th className="py-1 font-semibold text-right">Rencana (beli · cut loss · TP1)</th>
             </tr>
           </thead>
           <tbody>
@@ -118,11 +119,13 @@ export const PlanCheckpoint: React.FC<{
 }> = ({ market, onSelectTicker }) => {
   const [data, setData] = useState<Checkpoint | null>(null);
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     const r = await api.getPlanCheckpoint(market);
-    setData(r);
+    if (r) setData(r);
+    setFailed(!r);
     setLoading(false);
   }, [market]);
 
@@ -132,7 +135,16 @@ export const PlanCheckpoint: React.FC<{
     return () => window.clearInterval(id);
   }, [load]);
 
-  if (!data) return null;
+  if (!data) {
+    return failed ? (
+      <div className="p-3 rounded-2xl border border-borderMuted bg-surface text-[11px] text-gray-300 flex items-center justify-between gap-2">
+        <span>Posisi harga terhadap rencana belum bisa dimuat.</span>
+        <button type="button" onClick={load} className="text-emerald-300 hover:text-emerald-200 font-semibold">
+          Coba lagi
+        </button>
+      </div>
+    ) : null;
+  }
   if (!data.live) {
     return data.recap?.rows?.length ? (
       <RecapView recap={data.recap} market={market} onSelectTicker={onSelectTicker} />
@@ -179,10 +191,11 @@ export const PlanCheckpoint: React.FC<{
         <div className="overflow-x-auto">
           <table className="w-full text-[11px]">
             <thead>
-              <tr className="text-gray-500 text-left">
+              <tr className="text-gray-400 text-left">
                 <th className="py-1 pr-3 font-semibold">Saham</th>
                 <th className="py-1 pr-3 font-semibold text-right">Harga</th>
                 <th className="py-1 pr-3 font-semibold">Status</th>
+                <th className="py-1 pr-3 font-semibold">Posisi harga</th>
                 <th className="py-1 pr-3 font-semibold text-right">Zona beli</th>
                 <th className="py-1 pr-3 font-semibold text-right">Cut loss</th>
                 <th className="py-1 font-semibold text-right">TP1</th>
@@ -201,8 +214,21 @@ export const PlanCheckpoint: React.FC<{
                     <span className="ml-1.5 text-[9px] text-gray-500">{r.source}</span>
                   </td>
                   <td className="py-1.5 pr-3 text-right font-mono text-gray-200">{fmt(r.price)}</td>
-                  <td className={`py-1.5 pr-3 ${POSITION_CLS[r.status] ?? 'text-gray-300'}`}>
+                  <td className="py-1.5 pr-3">
+                    {r.action_status ? <ActionStatusBadge status={r.action_status} compact /> : <span className="text-gray-500">-</span>}
+                  </td>
+                  <td
+                    className={`py-1.5 pr-3 ${
+                      // "In the zone" is only a buy for a LAYAK plan; otherwise it is just where the price is
+                      r.status === 'IN_ZONE' && r.action_status && r.action_status !== 'LAYAK'
+                        ? 'text-gray-300'
+                        : POSITION_CLS[r.status] ?? 'text-gray-300'
+                    }`}
+                  >
                     {r.label}
+                    {r.status === 'IN_ZONE' && r.action_status && r.action_status !== 'LAYAK' && (
+                      <span className="block text-[10px] text-amber-300/90">status {r.action_status} — belum layak dibeli</span>
+                    )}
                     {r.touched_stop && r.status !== 'BELOW_STOP' && (
                       <span className="block text-[10px] text-rose-300/80">sempat menyentuh cut loss</span>
                     )}
@@ -210,7 +236,7 @@ export const PlanCheckpoint: React.FC<{
                   <td className="py-1.5 pr-3 text-right font-mono text-gray-300">
                     {fmt(r.entry_low)}–{fmt(r.entry_high)}
                     {r.recommended_entry ? (
-                      <span className="block text-[10px] text-cyan-300/90 font-sans">Harga saran (limit) {fmt(r.recommended_entry)}</span>
+                      <span className="block text-[10px] text-cyan-300/90 font-sans">Harga beli (limit) {fmt(r.recommended_entry)}</span>
                     ) : null}
                   </td>
                   <td className="py-1.5 pr-3 text-right font-mono text-rose-300">{fmt(r.stop_loss)}</td>

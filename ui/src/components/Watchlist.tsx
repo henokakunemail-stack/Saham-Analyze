@@ -1,6 +1,7 @@
 import React from 'react';
 import { WatchlistItem, ScreenerItem } from '../types/stock';
 import { InflowBadge } from './InflowBadge';
+import { ActionStatusBadge } from './ActionStatusBadge';
 import { fmtPct, fmtPrice } from './help/format';
 import { clickableProps, FOCUS_RING } from '../lib/a11y';
 import { Star, Trash2 } from 'lucide-react';
@@ -115,28 +116,36 @@ export const Watchlist: React.FC<Props> = ({
 
                     <div className="flex items-center justify-between pt-2 border-t border-borderMuted">
                       <InflowBadge status={live.money_flow_status} cmf={live.cmf20} />
-                      <span
-                        className={`text-xs font-mono font-bold ${
-                          live.score >= 65 ? 'text-emerald-400' : live.score >= 45 ? 'text-gray-200' : 'text-rose-400'
-                        }`}
-                      >
-                        Skor: {live.score}/100
+                      <span className="flex items-center gap-2">
+                        {live.action && <ActionStatusBadge status={live.action.status} compact />}
+                        <span
+                          className={`text-xs font-mono font-bold ${
+                            live.score >= 65 ? 'text-emerald-400' : live.score >= 45 ? 'text-gray-200' : 'text-rose-400'
+                          }`}
+                        >
+                          Skor {live.score}
+                        </span>
                       </span>
                     </div>
-                    {(live.badge_text || live.pullback_label) && (
-                      <div className="mt-2 space-y-0.5 text-[11px]">
-                        {live.badge_text && <div className="font-semibold text-gray-200">{live.badge_text}</div>}
-                        {live.pullback_label && <div className="text-gray-400">{live.pullback_label}</div>}
-                        {live.stop_loss ? (
-                          <div className="text-gray-500 font-mono">
-                            Cut loss: {fmtPrice(live.stop_loss)}
-                            {live.price && live.price <= live.stop_loss ? (
-                              <span className="ml-1 text-rose-400 font-bold">· sudah tembus</span>
-                            ) : null}
-                          </div>
-                        ) : null}
-                      </div>
-                    )}
+                    <div className="mt-2 space-y-0.5 text-[11px]">
+                      {live.recommended_entry ? (
+                        <div className="font-mono text-gray-300">
+                          Beli limit <span className="text-cyan-300 font-bold">{fmtPrice(live.recommended_entry)}</span>
+                          {live.target_tp1 ? <> · TP1 <span className="text-emerald-300">{fmtPrice(live.target_tp1)}</span></> : null}
+                        </div>
+                      ) : null}
+                      {live.stop_loss ? (
+                        <div className="font-mono text-rose-300">
+                          Cut loss {fmtPrice(live.stop_loss)}
+                          {live.price && live.price <= live.stop_loss ? <span className="ml-1 font-bold">· sudah tembus</span> : null}
+                        </div>
+                      ) : null}
+                      {live.reading?.headline ? (
+                        <div className="text-gray-400 line-clamp-2">{live.reading.headline}</div>
+                      ) : live.pullback_label ? (
+                        <div className="text-gray-400">{live.pullback_label}</div>
+                      ) : null}
+                    </div>
                   </>
                 ) : isScreenerLoading ? (
                   <div className="space-y-2 mt-2 animate-pulse" aria-hidden="true">
@@ -144,8 +153,9 @@ export const Watchlist: React.FC<Props> = ({
                     <div className="h-3 w-40 rounded bg-slate-800" />
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Belum ada di hasil scan {itemMarket} terakhir. Klik untuk membuka analisis lengkap.
+                  <p className="text-xs text-gray-400 mt-2">
+                    Belum ada di hasil scan {itemMarket} terakhir — pindah ke tab {itemMarket} di atas untuk data terbaru, atau
+                    klik untuk membuka analisis lengkap.
                   </p>
                 )}
               </div>

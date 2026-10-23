@@ -127,22 +127,28 @@ export const Header: React.FC<Props> = ({
 
         {/* Auto-Scan Status Pill */}
         <div
-          className="hidden 2xl:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-700/60 text-[11px] font-mono"
-          title={session ? `${session.exchange}: ${session.label}` : undefined}
+          className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-700/60 text-[11px]"
+          title={session ? `${session.exchange}: ${session.label} · ${session.auto_scan_label ?? ''}` : undefined}
         >
           {isScanning ? (
-            <div className="flex items-center gap-1.5 text-amber-400">
+            <div className="flex items-center gap-1.5 text-amber-400 font-mono">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-              <span>Memindai Pasar...</span>
+              <span>Memindai pasar...</span>
             </div>
           ) : (
-            <div className={`flex items-center gap-1.5 ${autoScanOff ? 'text-gray-400' : 'text-emerald-400'}`}>
-              <Zap className={`w-3 h-3 ${autoScanOff ? 'text-gray-500' : 'text-emerald-400 fill-emerald-400/30'}`} />
-              <span>{session?.auto_scan_label ?? 'Status auto-scan belum tersedia'}</span>
+            <div className="flex items-center gap-1.5">
+              {/* Whether the exchange is open is what explains moving / still numbers: always shown */}
+              <span
+                className={`w-2 h-2 rounded-full ${session?.trading_day_live ? 'bg-emerald-400' : 'bg-gray-500'}`}
+                aria-hidden="true"
+              />
+              <span className="text-gray-200">{session?.label ?? 'Status bursa belum tersedia'}</span>
+              <span className={`hidden 2xl:inline-flex items-center gap-1 border-l border-slate-700 pl-1.5 font-mono ${autoScanOff ? 'text-gray-400' : 'text-emerald-400'}`}>
+                <Zap className={`w-3 h-3 ${autoScanOff ? 'text-gray-500' : 'text-emerald-400 fill-emerald-400/30'}`} />
+                {session?.auto_scan_label ?? ''}
+              </span>
               {lastScanFormatted && (
-                <span className="text-gray-400 border-l border-slate-700 pl-1.5 font-sans">
-                  {lastScanFormatted}
-                </span>
+                <span className="hidden 2xl:inline text-gray-400 border-l border-slate-700 pl-1.5">{lastScanFormatted}</span>
               )}
             </div>
           )}
@@ -193,6 +199,7 @@ export const Header: React.FC<Props> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={market === 'IDX' ? 'Cari BBCA, BBRI, ADRO...' : 'Cari NVDA, AAPL, TSLA...'}
+            aria-label="Cari kode saham"
             className="w-52 bg-[#090D16] border border-borderMuted rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/30 transition-all font-mono"
           />
         </form>

@@ -48,6 +48,10 @@ def test_reading_follows_the_action_status():
     assert "jangan dikejar" in out["headline"] and out["base_stance"] == "PANTAU"
     kept = pipeline.align_reading({"stance": "LAYAK_DIPERTIMBANGKAN", "headline": "ok"}, {"status": "LAYAK", "reasons": []})
     assert kept["headline"] == "ok"
+    # TUNGGU next to a "Hindari" reading (no uptrend): the badge says "belum layak", not "hindari"
+    out = pipeline.align_reading({"stance": "HINDARI", "headline": "Belum ada tren naik — strategi pullback tidak berlaku."},
+                                 {"status": "TUNGGU", "reasons": ["Belum ada sinyal beli"]})
+    assert out["stance"] == "BELUM_LAYAK" and out["headline"].startswith("Belum layak beli — cukup dipantau. Belum ada tren")
     assert reading["stance"] == "LAYAK_DIPERTIMBANGKAN"                 # input not mutated
 
 

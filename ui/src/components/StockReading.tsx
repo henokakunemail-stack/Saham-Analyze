@@ -9,6 +9,7 @@ const STANCE_STYLE: Record<string, { label: string; cls: string }> = {
   TUNGGU_PULLBACK: { label: 'Tunggu Pullback', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/40' },
   TAHAN: { label: 'Tahan Pembelian', cls: 'bg-rose-500/15 text-rose-300 border-rose-500/40' },
   HINDARI: { label: 'Hindari', cls: 'bg-rose-500/15 text-rose-300 border-rose-500/40' },
+  BELUM_LAYAK: { label: 'Belum Layak · Pantau', cls: 'bg-slate-700/40 text-slate-200 border-slate-600' },
   LEWAT: { label: 'Sudah Lewat Hari Ini', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/40' },
   BATAL: { label: 'Rencana Batal', cls: 'bg-rose-500/15 text-rose-300 border-rose-500/40' },
   JANGAN_KEJAR: { label: 'Jangan Dikejar', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/40' },
@@ -16,16 +17,17 @@ const STANCE_STYLE: Record<string, { label: string; cls: string }> = {
 };
 
 /** Algorithm's explicit plan for one stock: stance, triggers (met or not), invalidation, target. */
-export const ReadingPlan: React.FC<{ reading?: StockReadingPlan | null }> = ({ reading }) => {
+/** `compact` (Top 10 card): the plan box right below already shows cut loss and target. */
+export const ReadingPlan: React.FC<{ reading?: StockReadingPlan | null; compact?: boolean }> = ({ reading, compact }) => {
   if (!reading) return null;
   const st = STANCE_STYLE[reading.stance] ?? STANCE_STYLE.NETRAL;
   return (
     <div className="p-3 rounded-xl bg-[#090D16] border border-borderMuted space-y-2 mb-3" onClick={(e) => e.stopPropagation()}>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Bacaan Algoritma</span>
-        <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${st.cls}`}>{st.label}</span>
+        <span className="text-[11px] uppercase tracking-wider font-bold text-gray-400">Bacaan algoritma</span>
+        <span className={`px-2 py-0.5 rounded-full border text-[11px] font-bold ${st.cls}`}>{st.label}</span>
       </div>
-      <p className="text-[11px] text-gray-200 leading-snug">{reading.headline}</p>
+      <p className="text-xs text-gray-100 leading-snug">{reading.headline}</p>
       <ul className="space-y-0.5">
         {reading.triggers.map((t) => (
           <li key={t.label} className={`flex items-center gap-1.5 text-[11px] ${t.met ? 'text-emerald-300' : 'text-gray-400'}`}>
@@ -37,7 +39,8 @@ export const ReadingPlan: React.FC<{ reading?: StockReadingPlan | null }> = ({ r
           </li>
         ))}
       </ul>
-      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] font-mono">
+      {!compact && (
+      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] font-mono">
         {reading.invalidation && (
           <span className="inline-flex items-center gap-1 text-rose-300">
             <ShieldAlert className="w-3 h-3" />
@@ -51,7 +54,8 @@ export const ReadingPlan: React.FC<{ reading?: StockReadingPlan | null }> = ({ r
           </span>
         )}
       </div>
-      {reading.news_note && <p className="text-[10px] text-cyan-300">{reading.news_note}</p>}
+      )}
+      {reading.news_note && <p className="text-[11px] text-cyan-300">{reading.news_note}</p>}
     </div>
   );
 };

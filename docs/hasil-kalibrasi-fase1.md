@@ -11,7 +11,7 @@ Pembanding: `docs/hasil-backtest-baseline.md`. Kode: `engine/screener/calibratio
 
 - **Data:** 126 saham IDX (daftar default), candle dari cache lokal, IHSG (`^JKSE`) sebagai pembanding regime.
   Walk-forward `backtest.walk_forward` (horizon 10, evaluasi tiap 3 hari bursa), aturan simulasi rencana sama
-  dengan baseline (`plan_sim`: order di harga saran 5 hari, cut loss dicek sebelum TP, tanpa biaya).
+  dengan baseline (`plan_sim`: order di harga beli 5 hari, cut loss dicek sebelum TP, tanpa biaya).
   Dihitung **sekali** (23.923 rencana, 29 Apr 2024 – 9 Okt 2026), disimpan, lalu semua varian dinilai offline
   dari baris yang sama — tidak ada indikator yang dihitung ulang.
 - **Periode:** awal (in-sample) = sebelum 11 Des 2025; uji (out-of-sample) = sejak 11 Des 2025.

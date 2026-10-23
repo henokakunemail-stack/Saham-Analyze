@@ -89,18 +89,20 @@ export const POSITION_CLS: Record<string, string> = {
   AT_TP2: 'text-emerald-200',
 };
 
-const PriceBasis: React.FC<{ levels: TradeLevels }> = ({ levels }) => {
+const PriceBasis: React.FC<{ levels: TradeLevels; compact?: boolean }> = ({ levels, compact }) => {
   if (!levels.as_of) return null;
   const day = fmtDay(levels.as_of);
   if (levels.frozen && levels.live) {
     const live = levels.live;
     return (
       <>
-        <div className="text-gray-300">
-          📌 Rencana, skor & indikator dari penutupan {day} (final) — dikunci selama sesi hari ini; harga dan posisi
-          di bawah ini mengikuti pasar (tertunda ±15 menit).
-        </div>
-        <div className={POSITION_CLS[live.status] ?? 'text-gray-300'}>
+        {!compact && (
+          <div className="text-gray-300">
+            📌 Rencana, skor & indikator dari penutupan {day} (final) — dikunci selama sesi hari ini; harga dan posisi
+            di bawah ini mengikuti pasar (tertunda ±15 menit).
+          </div>
+        )}
+        <div className={`${POSITION_CLS[live.status] ?? 'text-gray-300'} ${compact ? 'font-semibold' : ''}`}>
           Harga sekarang {fmt(live.price)}: {live.label}
           {live.touched_stop && live.status !== 'BELOW_STOP' ? ` · hari ini sempat menyentuh cut loss ${fmt(levels.stop_loss)}` : ''}
           {live.touched_tp1 && live.status !== 'AT_TP1' && live.status !== 'AT_TP2' ? ` · hari ini sempat menyentuh TP1 ${fmt(levels.target_tp1)}` : ''}
@@ -119,7 +121,46 @@ const PriceBasis: React.FC<{ levels: TradeLevels }> = ({ levels }) => {
   }
   return (
     <div className="text-gray-300">
-      📅 Dasar harga: penutupan {day} (final) — rencana untuk sesi bursa berikutnya.
+      📅 {compact ? `Rencana dari penutupan ${day} — untuk sesi bursa berikutnya.` : `Dasar harga: penutupan ${day} (final) — rencana untuk sesi bursa berikutnya.`}
+    </div>
+  );
+};
+
+/** From where the price is now: how far it must dip to fill the limit, and room left to TP1. */
+const FromNow: React.FC<{ levels: TradeLevels }> = ({ levels }) => {
+  const now = levels.live?.price ?? levels.price;
+  if (!now || !(levels.recommended_entry > 0) || !(levels.target_tp1 > 0)) return null;
+  const pct = (v: number) => {
+    const p = (v / now - 1) * 100;
+    return `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p).toLocaleString('id-ID', { maximumFractionDigits: 1 })}%`;
+  };
+  const room = levels.target_tp1 / now - 1;
+  return (
+    <div className="font-mono">
+      <span className="text-gray-400 font-sans">Dari harga sekarang {fmt(now)}:</span> harga beli{' '}
+      {pct(levels.recommended_entry)} · TP1 <span className={room <= 0 ? 'text-amber-300' : ''}>{pct(levels.target_tp1)}</span>
+      {room <= 0 && <span className="font-sans text-amber-300"> — target sudah tercapai di harga sekarang</span>}
+    </div>
+  );
+};
+
+const Flags: React.FC<{ levels: TradeLevels }> = ({ levels }) =>
+  levels.flags?.length > 0 ? (
+    <ul className="text-amber-300 space-y-0.5">
+      {levels.flags.map((f) => (
+        <li key={f}>⚠ {FLAG_TEXT[f] ?? f}</li>
+      ))}
+    </ul>
+  ) : null;
+
+/** The few lines a card shows under the plan box: where the price is vs the plan, and warnings. */
+export const PlanNow: React.FC<{ levels?: TradeLevels | null }> = ({ levels }) => {
+  if (!levels) return null;
+  return (
+    <div className="text-[11px] text-gray-300 space-y-0.5" onClick={(e) => e.stopPropagation()}>
+      <PriceBasis levels={levels} compact />
+      <FromNow levels={levels} />
+      <Flags levels={levels} />
     </div>
   );
 };
@@ -131,7 +172,7 @@ const OpenPlan: React.FC<{ levels: TradeLevels; compact?: boolean }> = ({ levels
     {
       cls: 'text-amber-300',
       when: `Di atas ${fmt(entry_high)}`,
-      then: 'Jangan dikejar — tunggu turun ke zona entry, atau lewati saham ini.',
+      then: 'Jangan dikejar — tunggu turun ke zona beli, atau lewati saham ini.',
     },
     {
       cls: 'text-emerald-300',
@@ -144,7 +185,7 @@ const OpenPlan: React.FC<{ levels: TradeLevels; compact?: boolean }> = ({ levels
           {
             cls: 'text-sky-300',
             when: `Antara ${fmt(stop_loss)} dan ${fmt(entry_low)}`,
-            then: 'Support sedang diuji — masuk hanya jika harga berbalik naik kembali ke zona entry.',
+            then: 'Support sedang diuji — masuk hanya jika harga berbalik naik kembali ke zona beli.',
           },
         ]
       : []),
@@ -166,7 +207,7 @@ const OpenPlan: React.FC<{ levels: TradeLevels; compact?: boolean }> = ({ levels
           </li>
         ))}
       </ul>
-      <p className="text-gray-500 mt-1">
+      <p className="text-gray-400 mt-1">
         Harga bisa langsung melompat (gap) saat pembukaan — cek harga pembukaan dulu sebelum memasang order.
         {levels.market !== 'US' &&
           ' Begitu juga setelah jeda siang: berita selama istirahat bisa membuat sesi 2 dibuka jauh dari harga akhir sesi 1.'}
@@ -175,55 +216,38 @@ const OpenPlan: React.FC<{ levels: TradeLevels; compact?: boolean }> = ({ levels
   );
 };
 
-/** Where each level comes from, plus risk per lot and warnings. */
-export const LevelBasis: React.FC<{ levels?: TradeLevels | null; compact?: boolean }> = ({ levels, compact }) => {
+/** Where each level comes from, plus risk per lot and warnings. `withNow={false}` when the card
+ *  already shows PlanNow above it. */
+export const LevelBasis: React.FC<{ levels?: TradeLevels | null; compact?: boolean; withNow?: boolean }> = ({
+  levels,
+  compact,
+  withNow = true,
+}) => {
   if (!levels) return null;
   return (
-    <div className={`text-[10px] text-gray-400 space-y-0.5 ${compact ? '' : 'pt-1'}`} onClick={(e) => e.stopPropagation()}>
-      <PriceBasis levels={levels} />
-      {levels.recommended_entry > 0 && (
+    <div className={`text-[11px] text-gray-400 space-y-0.5 ${compact ? '' : 'pt-1'}`} onClick={(e) => e.stopPropagation()}>
+      {withNow && <PriceBasis levels={levels} />}
+      {withNow && levels.recommended_entry > 0 && (
         <div className="font-mono text-cyan-300/90">
-          Harga saran (limit) {fmt(levels.recommended_entry)}
-          <span className="font-sans text-gray-500">
+          Harga beli (limit) {fmt(levels.recommended_entry)}
+          <span className="font-sans text-gray-400">
             {' '}· di zona beli {fmt(levels.entry_low)}–{fmt(levels.entry_high)}; uji historis mengasumsikan order beli limit di harga ini
           </span>
         </div>
       )}
       <div>
-        <span className="text-gray-500">Entry:</span> {levels.entry_basis} · <span className="text-gray-500">CL:</span> {levels.stop_basis}
+        <span className="text-gray-400">Dasar harga beli:</span> {levels.entry_basis} ·{' '}
+        <span className="text-gray-400">Cut loss:</span> {levels.stop_basis}
       </div>
       <div>
-        <span className="text-gray-500">TP1:</span> {levels.tp1_basis} · <span className="text-gray-500">TP2:</span> {levels.tp2_basis}
+        <span className="text-gray-400">TP1:</span> {levels.tp1_basis} · <span className="text-gray-400">TP2:</span> {levels.tp2_basis}
       </div>
-      {(() => {
-        // What the plan means from where the price is now: how far it must dip to fill the limit,
-        // and how much room is left to TP1 — the two numbers that decide whether it is worth an order
-        const now = levels.live?.price ?? levels.price;
-        if (!now || !(levels.recommended_entry > 0) || !(levels.target_tp1 > 0)) return null;
-        const pct = (v: number) => {
-          const p = (v / now - 1) * 100;
-          return `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p).toLocaleString('id-ID', { maximumFractionDigits: 1 })}%`;
-        };
-        const room = levels.target_tp1 / now - 1;
-        return (
-          <div className="font-mono">
-            <span className="text-gray-500 font-sans">Dari harga sekarang {fmt(now)}:</span> saran beli{' '}
-            {pct(levels.recommended_entry)} · TP1 <span className={room <= 0 ? 'text-amber-300' : ''}>{pct(levels.target_tp1)}</span>
-            {room <= 0 && <span className="font-sans text-amber-300"> — target sudah tercapai di harga sekarang</span>}
-          </div>
-        );
-      })()}
+      {withNow && <FromNow levels={levels} />}
       <div className="font-mono">
         Risiko {fmt(levels.risk_pct)}% · Potensi ke TP1 {fmt(levels.reward_pct)}%
-        {levels.risk_per_lot ? ` · Risiko per lot ≈ Rp${fmt(levels.risk_per_lot)}` : ''} · Fraksi harga {fmt(levels.tick)}
+        {levels.risk_per_lot ? ` · Risiko per lot (100 lembar) ≈ Rp${fmt(levels.risk_per_lot)}` : ''} · Fraksi harga {fmt(levels.tick)}
       </div>
-      {levels.flags?.length > 0 && (
-        <ul className="text-amber-300 space-y-0.5">
-          {levels.flags.map((f) => (
-            <li key={f}>⚠ {FLAG_TEXT[f] ?? f}</li>
-          ))}
-        </ul>
-      )}
+      {withNow && <Flags levels={levels} />}
       <OpenPlan levels={levels} compact={compact} />
     </div>
   );

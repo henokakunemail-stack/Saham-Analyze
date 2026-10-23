@@ -14,9 +14,9 @@ def bar(o, h, lo, c):
 
 def test_read_bar_outcomes():
     assert sr.read_bar(LV, bar(4800, 4950, 4780, 4940))[:2] == (
-        "TP1", "Naik ke TP1 4.910 tanpa turun ke harga saran 4.740 — order limit tidak terisi")
+        "TP1", "Naik ke TP1 4.910 tanpa turun ke harga beli 4.740 — order limit tidak terisi")
     code, text, filled = sr.read_bar(LV, bar(4800, 4950, 4730, 4940))
-    assert code == "TP1" and filled and "harga saran 4.740" in text
+    assert code == "TP1" and filled and "harga beli 4.740" in text
     assert sr.read_bar(LV, bar(4800, 5250, 4790, 5200))[0] == "TP2"
     assert sr.read_bar(LV, bar(4800, 4820, 4730, 4760))[:1] + (sr.read_bar(LV, bar(4800, 4820, 4730, 4760))[2],) == ("FILLED", True)
     assert sr.read_bar(LV, bar(4800, 4820, 4760, 4790))[0] == "ZONE"

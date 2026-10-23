@@ -48,6 +48,7 @@ const STANCE_LABEL: Record<string, { text: string; cls: string }> = {
   TUNGGU_PULLBACK: { text: 'Tunggu pullback', cls: 'text-amber-300' },
   TAHAN: { text: 'Tahan pembelian', cls: 'text-rose-300' },
   HINDARI: { text: 'Hindari', cls: 'text-rose-300' },
+  BELUM_LAYAK: { text: 'Belum layak · pantau', cls: 'text-gray-300' },
   LEWAT: { text: 'Sudah lewat hari ini', cls: 'text-amber-300' },
   BATAL: { text: 'Rencana batal', cls: 'text-rose-300' },
   JANGAN_KEJAR: { text: 'Jangan dikejar', cls: 'text-amber-300' },
@@ -196,7 +197,7 @@ export const ScreenerTable: React.FC<Props> = ({
           />
         </div>
       </div>
-      <p className="text-[11px] text-gray-500 -mt-1">
+      <p className="text-[11px] text-gray-400 -mt-1">
         Skor dan label adalah ringkasan kondisi teknikal hari ini, bukan prediksi harga. Arahkan kursor / tekan ikon{' '}
         <span aria-hidden="true">ⓘ</span> di judul kolom untuk penjelasan.
       </p>
@@ -208,17 +209,19 @@ export const ScreenerTable: React.FC<Props> = ({
             <thead className="bg-[#090D16]/90 border-b border-borderMuted text-gray-400 font-semibold uppercase text-[10px] tracking-wider select-none">
               <tr>
                 <th scope="col" className="py-3 px-3 w-10 text-center">Pin</th>
-                <th scope="col" className="py-3 px-4">Ticker</th>
+                <th scope="col" className="py-3 px-4">Saham</th>
+                <th scope="col" className="py-3 px-4">
+                  <span className="inline-flex items-center gap-1">Status <InfoTip term="action_status" /></span>
+                </th>
                 <SortHeader label="Harga" field="price" {...sortProps} />
-                <SortHeader label="Chg %" field="change_pct" {...sortProps} />
+                <SortHeader label="Perubahan" field="change_pct" {...sortProps} />
                 <SortHeader label="Arah Tren" field="direction_score" term="direction_score" {...sortProps} />
-                <SortHeader label="Status Aliran Dana (CMF)" field="cmf20" term="money_flow_status" {...sortProps} />
+                <SortHeader label="Aliran Dana (CMF)" field="cmf20" term="money_flow_status" {...sortProps} />
                 <SortHeader label="RSI (14)" field="rsi14" term="rsi" {...sortProps} />
-                <SortHeader label="Vol Ratio" field="vol_ratio" term="vol_ratio" {...sortProps} />
+                <SortHeader label="Rasio Volume" field="vol_ratio" term="vol_ratio" {...sortProps} />
                 <SortHeader label="Likuiditas" field="liq_bn" {...sortProps} />
-                <SortHeader label="Ret 3 Bln" field="ret_3m" {...sortProps} />
-                <SortHeader label="vs Indeks 60H" field="rs_60d" {...sortProps} />
-                <th scope="col" className="py-3 px-4">Status</th>
+                <SortHeader label="Return 3 Bln" field="ret_3m" {...sortProps} />
+                <SortHeader label="vs IHSG 60 Hari" field="rs_60d" {...sortProps} />
                 <th scope="col" className="py-3 px-4">Katalis Berita</th>
                 <SortHeader label="Skor Potensi" field="score" term="composite_score" center {...sortProps} />
                 <th scope="col" className="py-3 px-4 text-center">Chart</th>
@@ -254,27 +257,43 @@ export const ScreenerTable: React.FC<Props> = ({
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span>{item.ticker}</span>
                           {item.is_confirmed_breakout && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30" title="Breakout terkonfirmasi: ≥4 dari 6 gerbang konfluensi lolos dan searah tren">
-                              ✅ KONFLUENSI
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-sans font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/30" title="Sinyal kuat: ≥4 dari 6 gerbang konfluensi lolos dan searah tren">
+                              Sinyal kuat
                             </span>
                           )}
                           {item.is_speculative ? (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-sans font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30" title={getTerm('speculative')?.read}>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-sans font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30" title={getTerm('speculative')?.read}>
                               ⚠️ Spekulatif
                             </span>
                           ) : item.health_grade === 'HEALTHY' ? (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-sans font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30" title="Kondisi keuangan emiten sehat (grade HEALTHY)">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-sans font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30" title="Kondisi keuangan emiten sehat">
                               🛡️ Sehat
                             </span>
                           ) : null}
                           <AbnormalDaysChip items={item.abnormal_recent} compact />
+                        </div>
+                        <div className="text-[10px] font-sans font-normal text-gray-400 mt-0.5">
+                          {item.sector}
                           {item.vsa_signal && item.vsa_signal !== 'NORMAL' && (
-                            <span className="px-1 py-0.2 rounded text-[8px] font-sans bg-purple-500/10 text-purple-300 border border-purple-500/20" title={`VSA: ${getTerm(`vsa_${item.vsa_signal}`)?.read ?? item.vsa_desc ?? ''}`}>
-                              {item.vsa_signal}
+                            <span title={getTerm(`vsa_${item.vsa_signal}`)?.read ?? item.vsa_desc ?? ''}>
+                              {item.sector ? ' · ' : ''}
+                              {getTerm(`vsa_${item.vsa_signal}`)?.term?.replace(/^VSA:\s*/, '') ?? item.vsa_label ?? item.vsa_signal}
                             </span>
                           )}
                         </div>
-                        {item.sector && <div className="text-[10px] font-sans font-normal text-gray-500 mt-0.5">{item.sector}</div>}
+                      </td>
+
+                      {/* Action status, else the algorithm stance */}
+                      <td className="py-3 px-4 text-[11px] whitespace-nowrap" title={item.action?.reasons?.join(' · ')}>
+                        {item.action ? (
+                          <ActionStatusBadge status={item.action.status} compact />
+                        ) : item.reading ? (
+                          <span className={STANCE_LABEL[item.reading.stance]?.cls ?? 'text-gray-300'} title={item.reading.headline}>
+                            {STANCE_LABEL[item.reading.stance]?.text ?? item.reading.stance}
+                          </span>
+                        ) : (
+                          '-'
+                        )}
                       </td>
 
                       {/* Price */}
@@ -342,19 +361,6 @@ export const ScreenerTable: React.FC<Props> = ({
                       {/* Relative strength vs index, 60 days */}
                       <td className={`py-3 px-4 font-mono text-[11px] ${(item.screen?.rs_60d ?? 0) >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
                         {item.screen?.rs_60d !== undefined && item.screen?.rs_60d !== null ? fmtPct(item.screen.rs_60d) : '-'}
-                      </td>
-
-                      {/* Action status (Fase 1), else the algorithm stance */}
-                      <td className="py-3 px-4 text-[11px] whitespace-nowrap" title={item.action?.reasons?.join(' · ')}>
-                        {item.action ? (
-                          <ActionStatusBadge status={item.action.status} compact />
-                        ) : item.reading ? (
-                          <span className={STANCE_LABEL[item.reading.stance]?.cls ?? 'text-gray-300'} title={item.reading.headline}>
-                            {STANCE_LABEL[item.reading.stance]?.text ?? item.reading.stance}
-                          </span>
-                        ) : (
-                          '-'
-                        )}
                       </td>
 
                       {/* Catalyst */}

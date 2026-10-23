@@ -178,6 +178,7 @@ def _res(ticker, **kw):
 
 
 def test_alert_detection_between_two_scans():
+    notifications.set_prefs(kinds={"breakout": True, "strong_bullish": True})   # off by default
     add_watchlist("LUCK.JK", "", "IDX")
     add_watchlist("KOTA.JK", "", "IDX")
     add_watchlist("BOLT.JK", "", "IDX")
@@ -205,8 +206,17 @@ def test_alert_detection_between_two_scans():
     assert len(notifications.list_alerts()["alerts"]) == 5
 
 
+def test_chase_alerts_are_off_by_default():
+    prefs = notifications.get_prefs()["kinds"]
+    assert prefs["breakout"] is False and prefs["strong_bullish"] is False
+    assert prefs["entry_zone"] and prefs["stop_loss"] and prefs["target_hit"] and prefs["outflow"]
+    notifications.on_scan_complete("IDX", [_res("BBCA.JK")])
+    notifications.on_scan_complete("IDX", [_res("BBCA.JK", is_confirmed_breakout=True, verdict="STRONG_BULLISH")])
+    assert notifications.list_alerts()["alerts"] == []
+
+
 def test_alert_prefs_and_never_raises():
-    notifications.set_prefs(kinds={"breakout": False})
+    notifications.set_prefs(kinds={"breakout": False, "strong_bullish": True})
     notifications.on_scan_complete("IDX", [_res("BBCA.JK")])
     notifications.on_scan_complete("IDX", [_res("BBCA.JK", is_confirmed_breakout=True, verdict="STRONG_BULLISH")])
     kinds = [a["kind"] for a in notifications.list_alerts()["alerts"]]
@@ -239,6 +249,7 @@ def test_api_endpoints():
     assert c.put("/api/universe/autoscan", json={"mode": "off"}).json()["mode"] == "off"
     assert c.put("/api/universe/autoscan", json={"mode": "bogus"}).status_code == 400
 
+    notifications.set_prefs(kinds={"breakout": True})
     notifications.on_scan_complete("IDX", [_res("BBCA.JK")])
     notifications.on_scan_complete("IDX", [_res("BBCA.JK", is_confirmed_breakout=True)])
     a = c.get("/api/alerts").json()
