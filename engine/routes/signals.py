@@ -269,6 +269,23 @@ def get_prediction_history_endpoint(
         "available_dates": dates
     }
 
+def live_track_record(market: str) -> Dict[str, Any]:
+    """Every prediction made under the current rules, evaluated together and judged (track_record)."""
+    from ..screener import track_record
+    from ..screener.actionability import RULES_VERSION
+    return track_record.build(
+        get_prediction_dates(market=market),
+        snapshot=lambda d: get_prediction_snapshot(d, market=market),
+        evaluate=lambda items: evaluate_predictions(items, market=market, horizon=DEFAULT_EVAL_HORIZON),
+        rules_version=RULES_VERSION)
+
+
+@router.get("/api/predictions/track-record")
+def get_track_record_endpoint(market: str = Query("IDX", pattern="^(IDX|US)$")):
+    """Live results of the current rules vs the backtest yardstick (verdict rules fixed in advance)."""
+    return {"market": market, **live_track_record(market)}
+
+
 @router.post("/api/predictions/backfill")
 def trigger_backfill_endpoint(req: PredictionBackfillRequest):
     """Trigger backfill snapshot for historical tracking."""

@@ -47,6 +47,12 @@ DATA_BLOCK_KINDS: Tuple[str, ...] = ("LOCK_DOWN", "LIMIT_DOWN", "SUSPENSION_GAP"
 # How many recent trading days an abnormal bar keeps blocking (and a LOCK_DOWN forces HINDARI)
 DATA_LOOKBACK_DAYS = 3
 
+# Version of the status + level rules. Raise it whenever a change alters which stocks are LAYAK or
+# their levels: the live track record only pools predictions made under the same rules.
+# 2026-10-24: Rugi:Untung >= 1:1,2, new candle detector, PBV data fix, fresh-data gate (live only;
+# all shipped before the first live prediction under this version).
+RULES_VERSION = "2026-10-24"
+
 BULLISH = ("MILD_BULLISH", "STRONG_BULLISH")
 BEARISH = ("MILD_BEARISH", "STRONG_BEARISH")
 STATUS_ORDER = {"LAYAK": 0, "TUNGGU": 1, "HINDARI": 2}
@@ -236,6 +242,15 @@ def assess(row: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> Dict
     if bad:
         a = bad[0]
         reasons.append(f"Ada {ABNORMAL_LABELS.get(a.get('kind'), a.get('kind'))} {_day_label(a['date'])} — tunggu stabil")
+
+    # ── Fresh data: the plan must be built on the latest session (live scans only; the backtest
+    # has no data_lag, so the gate passes there) ───────────────────────────────
+    lag = row.get("data_lag") or {}
+    lag_days = int(lag.get("days") or 0)
+    gates["fresh_ok"] = lag_days == 0
+    if lag_days:
+        last = f" (terakhir {_day_label(lag['last_bar'])})" if lag.get("last_bar") else ""
+        reasons.append(f"Data harga terlambat {lag_days} hari bursa{last} — tunggu data baru")
 
     # ── Status ──────────────────────────────────────────────────────────────
     live = (lv.get("live") or {}).get("status")

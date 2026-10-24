@@ -11,7 +11,9 @@ import {
   BrokerSummaryData,
   AiModelsResponse,
   ClosingReview,
-  FinancialStatements
+  FinancialStatements,
+  TrackRecord,
+  DataHealth
 } from '../types/stock';
 import { API_BASE } from './base';
 import { requestJson, TIMEOUT, ApiError } from './feedback';
@@ -80,6 +82,24 @@ export const api = {
   },
 
   /** Analisa Penutupan: last session vs its plan + next plan with an honest assessment (silent, null on failure). */
+  /** Data health of the latest scan (null on failure: the line just hides). */
+  async getDataHealth(market: 'IDX' | 'US'): Promise<DataHealth | null> {
+    try {
+      return await requestJson<DataHealth>(`${API_BASE}/data/health?market=${market}`);
+    } catch {
+      return null;
+    }
+  },
+
+  /** Live track record of the current rules (null on failure: the panel just hides). */
+  async getTrackRecord(market: 'IDX' | 'US'): Promise<TrackRecord | null> {
+    try {
+      return await requestJson<TrackRecord>(`${API_BASE}/predictions/track-record?market=${market}`, { timeout: TIMEOUT.slow });
+    } catch {
+      return null;
+    }
+  },
+
   async getClosingReview(market: 'IDX' | 'US'): Promise<ClosingReview | null> {
     try {
       return await requestJson<ClosingReview>(`${API_BASE}/plan/closing-review?market=${market}`, { timeout: TIMEOUT.slow });

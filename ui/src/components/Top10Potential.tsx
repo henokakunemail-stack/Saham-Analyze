@@ -5,6 +5,7 @@ import { ReadingPlan, LatestNews } from './StockReading';
 import { LevelBasis, PlanNow } from './FlowSummaryCard';
 import { ClosingReview } from './ClosingReview';
 import { AbnormalDaysChip } from './AbnormalDaysChip';
+import { DataHealthLine, DataWarnChip } from './DataHealth';
 import { ActionStatusBadge } from './ActionStatusBadge';
 import { ReasonChip } from './ReasonChip';
 import { InfoTip } from './help/InfoTip';
@@ -53,6 +54,8 @@ export const Top10Potential: React.FC<Props> = ({
   const countOf = (st: string) => top10All.filter((s) => s.action?.status === st).length;
   const hasStatus = top10All.some((s) => s.action);
   const frozenDay = top10All.find((s) => s.levels?.frozen)?.levels?.as_of;
+  // Changes when a new scan lands, so the data-health line reloads with it
+  const scanKey = items.reduce((m, s) => (s.updated_at && s.updated_at > m ? s.updated_at : m), '');
 
   // Fase 4: several picks from one sector move together — say so
   const crowded = Object.entries(
@@ -133,6 +136,7 @@ export const Top10Potential: React.FC<Props> = ({
             Bursa sedang berjalan: rencana dikunci dari penutupan terakhir; yang bergerak hanya harga (tertunda ±15 menit).
           </p>
         )}
+        {market && <DataHealthLine market={market} refreshKey={scanKey} />}
       </div>
 
       {market && <ClosingReview market={market} onSelectTicker={onSelectTicker} />}
@@ -290,6 +294,7 @@ export const Top10Potential: React.FC<Props> = ({
                             </span>
                           )}
                           <AbnormalDaysChip items={stock.abnormal_recent} compact />
+                          <DataWarnChip lag={stock.data_lag} score={stock.data_quality_score} />
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-sm font-bold font-mono text-gray-100">{fmtPrice(price)}</span>

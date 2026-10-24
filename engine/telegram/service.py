@@ -119,7 +119,7 @@ def status() -> Dict[str, Any]:
 
 def configure(**providers: Callable[..., Any]) -> None:
     """Engine callbacks: results(market), checkpoint(market), analysis(ticker), session(market),
-    history(market), request_scan(market)."""
+    history(market), track_record(market), request_scan(market)."""
     _providers.update(providers)
 
 
@@ -222,7 +222,14 @@ def build_midday(market: str) -> str:
 def build_weekly(market: str) -> str:
     fn = _providers.get("history")
     summary, dates = fn(market, 7) if fn else ({}, [])
-    return messages.weekly(summary or {}, dates or [], market)
+    track = None
+    tfn = _providers.get("track_record")
+    if tfn:
+        try:
+            track = tfn(market)
+        except Exception as e:  # the weekly message still goes out without it
+            print(f"[Telegram] track record: {e}")
+    return messages.weekly(summary or {}, dates or [], market, track)
 
 
 # ── Scheduled messages ──────────────────────────────────────────────────────

@@ -13,7 +13,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import pandas as pd
 
 from ..collectors import abnormal_days
-from ..collectors.data_quality import bar_is_final
+from ..collectors.data_quality import bar_is_final, lag_vs_reference
 from ..indicators.money_flow import compute_money_flow
 from ..indicators.screen_metrics import compute_screen_metrics
 from ..indicators.technical import compute_technical_indicators
@@ -99,8 +99,11 @@ def live_reading(reading: Optional[Dict[str, Any]], levels: Optional[Dict[str, A
 def analyze_frame(df: pd.DataFrame, ticker: str, market: str, sentiment: Dict[str, Any],
                   bench_df: Optional[pd.DataFrame], market_regime: Optional[Dict[str, Any]],
                   financials_fn: Callable[..., Dict[str, Any]],
-                  splits: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
-    """Everything the app shows about one stock, from its daily frame."""
+                  splits: Optional[List[Dict[str, Any]]] = None, check_fresh: bool = False) -> Dict[str, Any]:
+    """Everything the app shows about one stock, from its daily frame.
+
+    `check_fresh` (live use only): compare the last final bar with the index's and hold the status
+    (TUNGGU) when the stock's data is behind — a plan built on an old close is not today's plan."""
     live_tech = compute_technical_indicators(df, market)       # plan frozen on the final close + live position
     base, live = scoring_frame(df, market)
     scored = compute_technical_indicators(base, market, freeze_live_bar=False) if live else live_tech
@@ -117,7 +120,9 @@ def analyze_frame(df: pd.DataFrame, ticker: str, market: str, sentiment: Dict[st
         composite["levels"] = live_tech.get("levels")          # same plan, plus the live position
     screen = compute_screen_metrics(base, scored, direction, financials, market)
     abnormal = abnormal_days.recent(df, market, days=20, splits=splits)   # today's lock counts too
+    data_lag = lag_vs_reference(df, bench_df, market) if check_fresh else None
     action = assess({
+        "data_lag": data_lag,
         "ticker": ticker, "market": market, "verdict": composite.get("verdict"),
         "is_speculative": composite.get("is_speculative"), "market_mode": composite.get("market_mode"),
         "score": composite.get("score"), "raw_score": composite.get("raw_score"),
@@ -128,4 +133,5 @@ def analyze_frame(df: pd.DataFrame, ticker: str, market: str, sentiment: Dict[st
     composite["action"] = action
     composite["reading"] = live_reading(align_reading(composite.get("reading"), action), composite.get("levels"))
     return {"tech": tech, "flow": flow, "direction": direction, "composite": composite, "financials": financials,
-            "screen": screen, "abnormal_recent": abnormal, "action": action, "live": live, "scoring_df": base}
+            "screen": screen, "abnormal_recent": abnormal, "action": action, "live": live, "scoring_df": base,
+            "data_lag": data_lag}

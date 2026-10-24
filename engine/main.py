@@ -38,9 +38,9 @@ from .telegram import service as telegram_service
 from .collectors import abnormal_days, corp_actions
 from .routes import market as market_routes
 from . import market_breadth, sectors
-from .screener.actionability import assess as assess_action, rank_key
+from .screener.actionability import assess as assess_action, rank_key, RULES_VERSION
 from .screener.pipeline import analyze_frame
-from .screener import session_recap, closing_review, financial_statements
+from .screener import session_recap, closing_review, financial_statements, data_health
 from .screener.scoring import PILLAR_WEIGHTS
 from .screener.fundamentals import fetch_and_evaluate_financials, MAX_SANE_PBV
 from .screener.broker_summary import fetch_and_evaluate_broker_summary, fetch_from_sectors_app
@@ -199,7 +199,8 @@ def _analyze_single_ticker(ticker: str, market: str, all_news: List[Dict[str, An
         market_regime = with_news_risk(market_regime, all_news)
         ticker_news = _merge_news(filter_news_for_ticker(norm_ticker, all_news), extra_news)
         sent = aggregate_news_sentiment(ticker_news)
-        a = analyze_frame(df, norm_ticker, market, sent, bench_df, market_regime, fetch_and_evaluate_financials)
+        a = analyze_frame(df, norm_ticker, market, sent, bench_df, market_regime, fetch_and_evaluate_financials,
+                          check_fresh=True)
         tech, flow, direction = a["tech"], a["flow"], a["direction"]
         composite, financials = a["composite"], a["financials"]
 
@@ -262,6 +263,10 @@ def _analyze_single_ticker(ticker: str, market: str, all_news: List[Dict[str, An
             # ARA/ARB locks, suspension, corporate actions in the last 20 bars (incl. today)
             "abnormal_recent": a["abnormal_recent"],
             "action": a["action"],
+            # Sessions the last close is behind the index (Bagian 5: data health)
+            "data_lag": a["data_lag"],
+            # 0-100 from the cleaning report; < 80 shows a warning on the card
+            "data_quality_score": with_staleness(dq)["score"] if (dq := get_data_quality_report(norm_ticker)) else None,
             "pullback_state": composite.get("pullback_state"),
             "pullback_label": composite.get("pullback_label"),
             **direction_fields(direction),
@@ -360,17 +365,26 @@ def _run_scan(market: str, force: bool = True) -> List[Dict[str, Any]]:
         _finalize_rows(results, market)
         print(f"[Scan] {market} timings: news+index {t1 - t0:.1f}s · prices {t2 - t1:.1f}s · analysis {t3 - t2:.1f}s · "
               f"top news {t4 - t3:.1f}s · finalize {time.time() - t4:.1f}s")
+        try:
+            data_health.save(data_health.summarize(
+                market, [normalize_ticker(t, market) for t in tickers], results,
+                lambda t: with_staleness(rep) if (rep := get_data_quality_report(t)) else None))
+        except Exception as e:
+            print(f"[DataHealth] {e}")
         if results:
             # Predictions = the closing plan's LAYAK stocks, dated by that plan's close (an intraday
             # scan only re-checks today's position against yesterday's plan; a weekend rescan
             # rewrites the same date instead of adding a duplicate day)
-            plan_dates = {str((r.get("levels") or {}).get("as_of") or "")[:10] for r in results
-                          if (r.get("levels") or {}).get("bar_final") and not (r.get("levels") or {}).get("frozen")}
-            if len(plan_dates) == 1 and "" not in plan_dates:
-                plan_date = plan_dates.pop()
-                save_prediction_snapshot(select_predictions(results), market=market, snapshot_date=plan_date)
+            plan_date = data_health.plan_date(results)
+            if plan_date:
+                on_plan = [r for r in results if str((r.get("levels") or {}).get("as_of") or "")[:10] == plan_date]
+                save_prediction_snapshot(select_predictions(on_plan), market=market, snapshot_date=plan_date,
+                                         rules_version=RULES_VERSION)
                 # The list the next session trades against, for the after-close recap
                 session_recap.save_plan_list(market, plan_date, [r["ticker"] for r in results[:10]])
+                # Live track record of the current rules: alert once if it turns bad (background, never blocks)
+                threading.Thread(target=_check_track_record, args=(market,), daemon=True,
+                                 name=f"track-record-{market}").start()
             market_hours.mark_scan_done(market)
     except Exception as e:
         scan_progress.finish(error=str(e))
@@ -513,6 +527,14 @@ def get_stock_chart(
         # Abnormal days as chart markers (daily chart only)
         "markers": [] if is_intraday else abnormal_days.markers(df, market),
     }
+
+def _check_track_record(market: str) -> None:
+    try:
+        from .routes.signals import live_track_record
+        notifications.on_track_record(market, live_track_record(market)["verdict"])
+    except Exception as e:
+        print(f"[TrackRecord] {e}")
+
 
 def _session_recap(market: str, ranked: List[Dict[str, Any]], picks: Dict[str, str]) -> Optional[Dict[str, Any]]:
     """After the close: the last session against the plans it traded on (the Top 10 that was
@@ -666,7 +688,8 @@ def get_stock_analysis(ticker: str, market: str = Query("IDX", pattern="^(IDX|US
     sent = aggregate_news_sentiment(ticker_news)
     bench_df, market_regime = get_benchmark_context(market)
     market_regime = with_news_risk(market_regime, all_news)
-    a = analyze_frame(df, norm_ticker, market, sent, bench_df, market_regime, fetch_and_evaluate_financials, splits)
+    a = analyze_frame(df, norm_ticker, market, sent, bench_df, market_regime, fetch_and_evaluate_financials, splits,
+                      check_fresh=True)
     tech, flow, direction, comp, financials = a["tech"], a["flow"], a["direction"], a["composite"], a["financials"]
     abnormal = a["abnormal_recent"]
     vol_ratio = tech.get("vol_ratio", 1.0)
@@ -699,6 +722,7 @@ def get_stock_analysis(ticker: str, market: str = Query("IDX", pattern="^(IDX|US
         "news": ticker_news[:8],
         "data_quality": with_staleness(dq) if (dq := get_data_quality_report(norm_ticker)) else None,
         "abnormal_recent": abnormal,
+        "data_lag": a["data_lag"],
     }
 
 @app.get("/api/stock/{ticker}/broker-summary")
@@ -912,7 +936,8 @@ def validate_signal_endpoint(req: AiValidateSignalRequest):
         bench_df, market_regime = f_bench.result()
     sent = aggregate_news_sentiment(ticker_news)
     market_regime = with_news_risk(market_regime, all_news)
-    a = analyze_frame(df, norm_ticker, market, sent, bench_df, market_regime, fetch_and_evaluate_financials)
+    a = analyze_frame(df, norm_ticker, market, sent, bench_df, market_regime, fetch_and_evaluate_financials,
+                          check_fresh=True)
     tech, flow, direction, comp = a["tech"], a["flow"], a["direction"], a["composite"]
 
     headlines = [n.get("title", "") for n in ticker_news if n.get("title")]
@@ -973,6 +998,11 @@ def _tg_history(market: str, days: int):
     return recent_summary(market, days)
 
 
+def _tg_track_record(market: str):
+    from .routes.signals import live_track_record
+    return live_track_record(market)
+
+
 def _tg_expected_close(market: str) -> str:
     from .collectors.data_quality import last_closed_session
     return last_closed_session("^JKSE" if market == "IDX" else "^GSPC").date().isoformat()
@@ -985,6 +1015,7 @@ telegram_service.configure(
     analysis=_tg_analysis,
     session=market_hours.session_status,
     history=_tg_history,
+    track_record=_tg_track_record,
     expected_close=_tg_expected_close,
     request_scan=_tg_request_scan,
 )

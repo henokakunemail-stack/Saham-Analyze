@@ -13,12 +13,14 @@ const GATE_LABELS: Record<string, string> = {
   market_ok: 'Kondisi pasar',
   signal_ok: 'Sinyal beli',
   risk_ok: 'Risiko ≤ batas',
+  room_ok: 'Untung ke TP1 ≥ 1,2× risiko',
   vol_ok: 'Volatilitas wajar',
   liquid_ok: 'Cukup likuid',
   data_ok: 'Data harga normal',
+  fresh_ok: 'Data harga terbaru',
 };
 
-const GATE_ORDER = ['market_ok', 'signal_ok', 'risk_ok', 'vol_ok', 'liquid_ok', 'data_ok'];
+const GATE_ORDER = ['market_ok', 'signal_ok', 'risk_ok', 'room_ok', 'vol_ok', 'liquid_ok', 'data_ok', 'fresh_ok'];
 
 /** Gate checklist (✓/✗) behind the LAYAK / TUNGGU / HINDARI status, with the reasons. */
 export const ActionGates: React.FC<{ action?: ActionInfo | null }> = ({ action }) => {

@@ -62,3 +62,23 @@ def get_sectors(market: str = "IDX"):
     body: Dict[str, Any] = {"market": market, "sectors": strength, "updated_at": updated,
                             "missing": len(missing), "refreshing": bool(refreshing)}
     return body
+
+
+@router.get("/api/data/health")
+def get_data_health(market: str = "IDX"):
+    """Data health of the latest scan: fresh / late / failed downloads / low quality (Bagian 5).
+    Before the first scan with this build, it is rebuilt from the stored rows (failed downloads unknown)."""
+    from ..collectors.data_quality import with_staleness
+    from ..db import get_data_quality_report
+    from ..screener import data_health
+    market = _market(market)
+    stored = data_health.load(market)
+    if stored:
+        return stored
+    rows = get_screener_results(market=market)
+    if not rows:
+        return {"market": market, "available": False}
+    out = data_health.summarize(market, [r["ticker"] for r in rows], rows,
+                                lambda t: with_staleness(rep) if (rep := get_data_quality_report(t)) else None)
+    out["rebuilt"] = True
+    return out

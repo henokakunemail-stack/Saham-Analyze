@@ -10,6 +10,7 @@ import { fmtNum, fmtPct, fmtPrice } from './help/format';
 import { ScreenerFilters } from './ScreenerFilters';
 import { MarketBreadthPanel } from './MarketBreadthPanel';
 import { AbnormalDaysChip } from './AbnormalDaysChip';
+import { DataHealthLine, DataWarnChip } from './DataHealth';
 import { ActionStatusBadge } from './ActionStatusBadge';
 import { Criteria, EMPTY_CRITERIA, RANGE_DEFS, matches } from '../lib/screenerCriteria';
 
@@ -151,6 +152,8 @@ export const ScreenerTable: React.FC<Props> = ({
   }, [items, criteria, filterText, enableFilters]);
 
   const sortProps = { sortField, sortAsc, onSort: handleSort };
+  // Changes when a new scan lands, so the data-health line reloads with it
+  const scanKey = items.reduce((m, s) => (s.updated_at && s.updated_at > m ? s.updated_at : m), '');
 
   const sortedItems = useMemo(() => {
     return [...filteredItems].sort((a, b) => {
@@ -164,6 +167,7 @@ export const ScreenerTable: React.FC<Props> = ({
 
   return (
     <div className="space-y-4">
+      {enableFilters && <DataHealthLine market={market} refreshKey={scanKey} />}
       {/* Market breadth & sector strength; clicking a sector filters the table */}
       {enableFilters && (
         <MarketBreadthPanel
@@ -271,6 +275,7 @@ export const ScreenerTable: React.FC<Props> = ({
                             </span>
                           ) : null}
                           <AbnormalDaysChip items={item.abnormal_recent} compact />
+                          <DataWarnChip lag={item.data_lag} score={item.data_quality_score} />
                         </div>
                         <div className="text-[10px] font-sans font-normal text-gray-400 mt-0.5">
                           {item.sector}

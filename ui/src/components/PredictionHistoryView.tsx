@@ -5,6 +5,7 @@ import { api } from '../api/client';
 import { signalsApi } from '../api/signals';
 import { BacktestPanel } from './BacktestPanel';
 import { AiTrackRecord } from './AiTrackRecord';
+import { TrackRecordPanel } from './TrackRecord';
 import { useToast } from './ui/Toast';
 import { fmtPrice } from './help/format';
 import { FOCUS_RING } from '../lib/a11y';
@@ -147,6 +148,8 @@ const PredictionsTab: React.FC<Props> = ({ market, onSelectTicker }) => {
 
   return (
     <div className="space-y-4">
+      <TrackRecordPanel market={market} />
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 text-[11px]">
         {dates.length > 0 && (

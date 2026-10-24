@@ -27,7 +27,7 @@ Kebanyakan screener hanya memberi daftar saham "bagus". SAHAM menjawab pertanyaa
 | Beli di harga berapa? | **Zona beli + harga saran (limit)** di support nyata (swing low, EMA20/50, low 20/60 hari), sudah dibulatkan ke fraksi harga BEI |
 | Salah di mana? | **Cut loss** di bawah support struktural, risiko dibatasi maks 8 % |
 | Jual di mana? | **TP1 = resistance terdekat**, TP2 = resistance berikutnya — tidak digelembungkan demi R:R yang cantik |
-| Boleh dieksekusi sekarang? | **LAYAK / TUNGGU / HINDARI** — syarat risiko ≤ 6 %, untung ke TP1 ≥ 1,2× risiko, likuiditas ≥ Rp2 M/hari, tidak terlalu volatil, pasar tidak krisis, tanpa ARA/ARB baru |
+| Boleh dieksekusi sekarang? | **LAYAK / TUNGGU / HINDARI** — syarat risiko ≤ 6 %, untung ke TP1 ≥ 1,2× risiko, likuiditas ≥ Rp2 M/hari, tidak terlalu volatil, pasar tidak krisis, tanpa ARA/ARB baru, data harga sesi terakhir |
 | Rencana kemarin masih berlaku pagi ini? | Rencana **dikunci selama sesi**; harga live dibandingkan dengan rencana: *di zona beli*, *jangan dikejar*, *sudah di TP1*, *rencana batal* |
 | Apakah metodenya terbukti? | **Backtest walk-forward** 126 saham IDX, 2024–2026, hasilnya dipublikasikan apa adanya di [docs/](docs/hasil-akhir-fase1-5.md) |
 
@@ -38,13 +38,13 @@ Kebanyakan screener hanya memberi daftar saham "bagus". SAHAM menjawab pertanyaa
 - **Mode pasar otomatis** `NORMAL → CAUTIOUS → BEARISH → CRASH` dari kondisi IHSG + berita sistemik (MSCI, trading halt, arus keluar asing).
 - **Rencana trading yang realistis**: entry/cut loss/TP di level support-resistance nyata, **fraksi harga BEI** (Rp1/2/5/10/25), risiko per lot, basis setiap level dijelaskan.
 - **Posisi harga hari ini vs rencana**: Top 10 otomatis menurunkan saham yang sudah menyentuh TP, menembus cut loss, atau lari jauh di atas zona beli — supaya daftar berisi rencana yang *masih bisa dijalankan hari ini*.
-- **Cek tengah hari** (jeda siang BEI) dan **panduan saat bursa buka** (gap pembukaan, sesi 2).
+- **Analisa Penutupan**: setelah bursa tutup, setiap saham Top 10 dibaca ulang dari harga penutupan — peluang order limit terisi, apa yang terjadi di sesi tadi, dan rata-rata historis per status.
 - **Peringatan**: harga mencapai harga saran beli, menyentuh TP1, menyentuh cut loss — di aplikasi dan Telegram.
-- **Deteksi kualitas data**: hari **ARA/ARB** (harga terkunci), suspensi, aksi korporasi/split — agar ATR, pivot, dan sinyal volume tidak menyesatkan.
+- **Deteksi kualitas data**: hari **ARA/ARB** (harga terkunci), suspensi, aksi korporasi/split — agar ATR, pivot, dan sinyal volume tidak menyesatkan. Setiap scan merangkum **kesehatan data** (saham segar / terlambat / gagal diunduh / kualitas rendah); saham dengan harga terlambat ditahan **TUNGGU**.
 - **Market breadth** (% saham di atas EMA50) dan **kekuatan sektor** + peringatan konsentrasi sektor.
-- **Histori Prediksi**: rekam jejak nyata saham LAYAK, **uji historis** (backtest walk-forward), dan rekam jejak **validasi AI**.
+- **Histori Prediksi**: **rekam jejak nyata vs uji historis** — semua saham LAYAK dengan aturan yang sama dinilai bersama, dengan aturan penilaian yang ditulis sebelum datanya ada (minimal 30 transaksi, rentang 90 %), plus peringatan otomatis bila hasil nyata memburuk; **uji historis** (backtest walk-forward) dan rekam jejak **validasi AI**.
 - **Validasi AI** (second opinion): Claude (API key / login akun), 9router, atau endpoint kompatibel OpenAI — AI diberi level & status engine, termasuk posisi harga hari ini.
-- **Bot Telegram**: rencana harian setelah penutupan, cek tengah hari, peringatan langsung, rekam jejak mingguan, perintah `/top10`, `/cek BBCA`, `/rencana`, `/pasar`, `/rekam`.
+- **Bot Telegram**: rencana harian setelah penutupan, cek tengah hari, peringatan langsung, rekam jejak mingguan (dengan penilaian rekam jejak nyata), perintah `/top10`, `/cek BBCA`, `/rencana`, `/pasar`, `/rekam`.
 - **Grafik candlestick lokal** (lightweight-charts), radar berita RSS (CNBC Indonesia, Kontan, Antara, Yahoo, CNBC US), watchlist, glosarium istilah.
 - **Desktop Windows** (installer .exe) **atau server Linux 24/7** (Docker / systemd) dengan basic-auth.
 

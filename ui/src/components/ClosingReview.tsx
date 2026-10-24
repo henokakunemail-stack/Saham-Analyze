@@ -4,6 +4,7 @@ import { api } from '../api/client';
 import type { ClosingReview as Review, ClosingReviewRow, RecapOutcome } from '../types/stock';
 import { ActionStatusBadge } from './ActionStatusBadge';
 import { InfoTip } from './help/InfoTip';
+import { TrackRecordLine } from './TrackRecord';
 import { clickableProps, FOCUS_RING } from '../lib/a11y';
 
 const fmt = (v?: number | null) =>
@@ -202,6 +203,7 @@ export const ClosingReview: React.FC<{
             </InfoTip>
           </p>
         )}
+        <TrackRecordLine market={market} />
       </div>
 
       <div className="space-y-1.5">

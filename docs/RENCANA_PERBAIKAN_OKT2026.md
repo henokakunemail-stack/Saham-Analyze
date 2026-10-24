@@ -110,22 +110,57 @@ Semua lewat `engine/screener/calibration.py` (pilih di periode awal, uji sekali)
 
 ## 4. Rekam jejak nyata yang bisa dipercaya (K6, K1)
 
-1. Simpan setiap rencana penutupan (Top 10 + semua LAYAK) — sebagian sudah (`plan_top_<market>`, snapshot prediksi).
-2. Evaluasi otomatis tiap hari dengan simulator yang sama (jual separuh di TP1).
-3. Panel "Nyata vs uji historis": rata-rata R nyata, rentang ketidakpastian (makin banyak transaksi makin sempit),
-   dan aturan tegas "belum bisa dinilai sebelum ≥ 30 transaksi terisi".
-4. Laporan mingguan Telegram ikut menampilkan perbandingan ini.
-5. Peringatan otomatis bila hasil nyata keluar dari rentang uji historis (strategi mungkin tidak bekerja di kondisi sekarang).
+**Tujuan:** menjawab dengan jujur "apakah aturan yang dipakai sekarang benar-benar menghasilkan di pasar nyata?" —
+bukan menunggu feeling, dan tidak menyimpulkan terlalu cepat.
+
+**Kondisi sekarang:** snapshot prediksi (saham LAYAK, maks. 10/hari) sudah disimpan dan dievaluasi dengan simulator yang
+sama. Masalahnya: aturan berubah beberapa kali minggu ini, dan snapshot lama tidak mencatat aturan mana yang dipakai —
+mencampur semuanya akan menyesatkan.
+
+**Patokan dari uji historis (aturan sekarang, termasuk Rugi:Untung ≥ 1:1,2):** 164 transaksi LAYAK terisi, rata-rata
+**+0,36 R**, simpangan **1,53 R** per transaksi, menang 51 %. Karena hasil per transaksi sangat bervariasi, rentang 90 %
+rata-rata setelah n transaksi nyata kira-kira: 10 → ±0,80 R · 30 → ±0,46 R · 50 → ±0,36 R · 100 → ±0,25 R.
+Dengan ±1 saham LAYAK per hari dan ±70 % terisi, **30 transaksi butuh ±6–8 minggu**; kepastian yang lebih kuat butuh bulan.
+
+**Langkah:**
+1. **Versi aturan per prediksi.** Kolom baru `rules_version` di `prediction_snapshots`; konstanta `RULES_VERSION`
+   (mis. `2026-10-24`) dinaikkan setiap kali aturan status/level berubah. Prediksi lama tetap ada, ditandai "aturan lama".
+2. **Rekam jejak kumulatif** (`engine/screener/track_record.py`): semua prediksi dengan versi aturan sekarang dievaluasi
+   (simulator yang sama: order limit 5 hari, jual separuh di TP1), menghasilkan: jumlah rencana, terisi, selesai, masih
+   berjalan, rata-rata R, menang %, profit factor, rentang 90 % rata-rata R.
+3. **Penilaian dengan aturan tegas (ditulis sebelum datanya ada):**
+   - < 30 transaksi selesai → **"Belum cukup data"** (tampilkan kemajuan n/30 dan rata-rata sementara apa adanya);
+   - ≥ 30: batas atas rentang < 0 → **"Merugi di pasar nyata"** (peringatan kuat);
+   - ≥ 30: batas atas < +0,36 R → **"Di bawah harapan uji historis"**;
+   - ≥ 30: batas bawah > 0 → **"Terbukti positif"**;
+   - selain itu → **"Sesuai harapan, belum pasti"**.
+4. **Tampilan:** panel paling atas di Histori Prediksi "Nyata vs uji historis" (kemajuan, rata-rata nyata ± rentang,
+   patokan uji historis, kalimat penilaian), dan satu baris ringkas di Analisa Penutupan.
+5. **Peringatan otomatis:** notifikasi di aplikasi + Telegram saat penilaian berubah menjadi "Merugi" atau "Di bawah harapan".
+6. **Laporan mingguan Telegram** ikut menampilkan rekam jejak kumulatif + penilaiannya.
+7. Tes: versi aturan tersimpan, pengelompokan per versi, aturan penilaian di tiap ambang, endpoint.
 
 ---
 
-## 5. Ketergantungan pada Yahoo (K4)
+## 5. Kesehatan data Yahoo (K4)
 
-1. Ringkasan kesehatan data per scan: berapa saham gagal diunduh, terlambat, bolong, atau melompat harga.
-2. Saham dengan data terlambat/bolong tidak boleh LAYAK (cek apakah `data_ok` sudah mencakup ini; tambahkan bila belum).
-3. Cek silang harga penutupan dengan IHSG (hari tanpa data indeks = libur, bukan saham suspensi) — sebagian sudah.
-4. Jujur di UI: "Data dari Yahoo Finance, tertunda ±15 menit; X saham bermasalah di scan ini".
-   Sumber alternatif resmi (IDX) menolak akses otomatis; tidak ada sumber gratis andal lain — dicatat sebagai batasan.
+**Tujuan:** pengguna tahu kapan data bermasalah, dan saham dengan data yang tidak bisa dipercaya tidak pernah LAYAK.
+
+**Kondisi sekarang:** setiap saham punya laporan kualitas data (`data_quality_reports`: volume nol, tanggal bolong,
+lompatan harga, data terlambat), rata-rata skor 99, terendah 72 (PACK, TRUE, BNBR). Tetapi: data **terlambat** tidak
+menghalangi LAYAK, tidak ada ringkasan per scan, dan saham yang **gagal diunduh** hilang diam-diam dari daftar.
+
+**Langkah:**
+1. **Ringkasan per scan** (`scan_progress` / endpoint `/api/data/health`): saham di-scan, berhasil, gagal diunduh,
+   data terlambat (bar terakhir bukan sesi terakhir), dan yang punya masalah kualitas (per jenis), plus waktu scan.
+2. **Syarat baru "data segar"** di status: bar terakhir harus sesi bursa terakhir (selisih 0 hari bursa). Terlambat →
+   TUNGGU dengan alasan "Data harga terlambat N hari". Tidak memengaruhi uji historis (data historis selalu lengkap).
+3. **Skor kualitas rendah** (< 80) → peringatan di kartu & detail (sudah ada di detail; ditambah di kartu).
+4. **Tampilan:** satu baris di kepala Top 10 / Screener: "Data: 124 dari 126 saham segar · 2 terlambat · 1 gagal"
+   dengan rincian saat diklik; tetap menyebut sumbernya (Yahoo, tertunda ±15 menit).
+5. **Batasan yang dicatat jujur:** sumber resmi BEI menolak akses otomatis; tidak ada sumber gratis andal lain. Aplikasi
+   tidak bisa memperbaiki data yang salah dari sumbernya — hanya mendeteksi dan menahan status.
+6. Tes: deteksi terlambat, syarat data segar, ringkasan scan, endpoint.
 
 ---
 
@@ -137,8 +172,8 @@ Semua lewat `engine/screener/calibration.py` (pilih di periode awal, uji sekali)
 | 1 Candlestick | ✅ deteksi diperbaiki, diuji: tidak ada pola yang konsisten di IDX; candle tetap di skor (mencabutnya memperburuk); setiap pola menampilkan rekam jejaknya — `docs/hasil-uji-candlestick.md` |
 | 2 Laporan keuangan | ✅ bagian "Laporan keuangan" di detail saham (mata uang laporan, bank dikecualikan dari utang, valuasi vs sektor); bendera merah tidak dipakai sebagai syarat — `docs/hasil-uji-fundamental.md`. Ditemukan & diperbaiki: PBV mustahil di 38 dari 200 saham (emiten berlaporan USD) yang membuat penilaian kesehatan keliru |
 | 3 Aturan level & syarat | ✅ zona breakout & level "bersih" ditolak; **syarat Rugi:Untung ≥ 1:1,2 dipakai** (keputusan pengguna 24 Okt; kuat di kedua periode, sampel periode uji 37 transaksi — dipantau di Bagian 4) |
-| 4 Rekam jejak nyata | berikutnya |
-| 5 Kesehatan data Yahoo | berikutnya |
+| 4 Rekam jejak nyata | ✅ `rules_version` per prediksi (aturan sekarang `2026-10-24`; 28 prediksi lama dipisah sebagai "aturan lama"); `engine/screener/track_record.py` + `/api/predictions/track-record`; panel "Nyata vs uji historis" di Histori Prediksi, satu baris di Analisa Penutupan; notifikasi + Telegram sekali saat penilaian menjadi "Merugi"/"Di bawah harapan"; laporan mingguan Telegram ikut menampilkan penilaian. Penilaian pertama yang berarti: setelah 30 transaksi selesai (±6–8 minggu) |
+| 5 Kesehatan data Yahoo | ✅ syarat ke-8 "Data harga terbaru" (`fresh_ok`): ketinggalan dihitung dari bar indeks sendiri, jadi libur bursa tidak dianggap terlambat; hanya di scan nyata (uji historis tidak berubah). Ringkasan per scan + `/api/data/health`; baris "Data: X dari Y saham segar …" (bisa diklik) di Top 10 & Screener; chip "Data terlambat / kurang baik" di kartu & tabel. Ditemukan & diperbaiki: satu saham berdata terlambat dulu membuat snapshot prediksi hari itu tidak tersimpan sama sekali; sekarang dipakai tanggal terbaru yang dimiliki mayoritas saham. Juga: syarat Rugi:Untung (Bagian 3) belum punya label di daftar syarat — sudah ditambahkan |
 
 ## Urutan pengerjaan
 

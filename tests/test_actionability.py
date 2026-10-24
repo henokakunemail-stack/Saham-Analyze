@@ -34,7 +34,8 @@ def test_all_gates_pass_is_layak():
     out = assess(make_row())
     assert out["status"] == "LAYAK"
     assert out["reasons"] == []
-    assert set(out["gates"]) == {"market_ok", "signal_ok", "risk_ok", "room_ok", "vol_ok", "liquid_ok", "data_ok"}
+    assert set(out["gates"]) == {"market_ok", "signal_ok", "risk_ok", "room_ok", "vol_ok", "liquid_ok", "data_ok",
+                                 "fresh_ok"}
     assert all(out["gates"].values())
 
 

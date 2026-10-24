@@ -140,13 +140,22 @@ def alert(kind: str, ticker: str, market: str, live: Dict[str, Any], lv: Dict[st
     return "\n".join(lines)
 
 
-def weekly(summary: Dict[str, Any], dates: List[str], market: str) -> str:
+def _track_lines(track: Optional[Dict[str, Any]]) -> List[str]:
+    """Cumulative live record of the current rules (the weekly sample alone is too small to judge)."""
+    v = (track or {}).get("verdict")
+    if not v:
+        return []
+    return ["", f"⚖️ <b>Rekam jejak nyata aturan sekarang: {escape(v.get('label', ''))}</b>",
+            escape(v.get("text", ""))]
+
+
+def weekly(summary: Dict[str, Any], dates: List[str], market: str, track: Optional[Dict[str, Any]] = None) -> str:
     s = summary
     lines = [f"📊 <b>Rekam Jejak Mingguan {escape(market)}</b>",
              f"Rencana tanggal {escape(dates[-1]) if dates else '-'} s/d {escape(dates[0]) if dates else '-'} "
              f"({len(dates)} hari, {s.get('total_predictions', 0)} rencana)"]
     if not s.get("total_predictions"):
-        lines += ["", "Tidak ada sinyal beli yang dicatat minggu ini (pasar lemah/krisis).", DISCLAIMER]
+        lines += ["", "Tidak ada sinyal beli yang dicatat minggu ini (pasar lemah/krisis).", *_track_lines(track), DISCLAIMER]
         return "\n".join(lines)
     tp = (s.get("hit_tp1_count") or 0) + (s.get("hit_tp2_count") or 0)
     unfilled = (s.get("not_filled_count") or 0) + (s.get("cancelled_count") or 0)
@@ -163,7 +172,8 @@ def weekly(summary: Dict[str, Any], dates: List[str], market: str) -> str:
         lines.append(f"Rata-rata hasil: <b>{signed(s.get('avg_return_pct'))}</b>")
     if s.get("avg_excess_return_pct") is not None:
         lines.append(f"vs indeks: {signed(s.get('avg_excess_return_pct'))}")
-    lines += ["", "<i>Tanpa biaya transaksi. Sampel mingguan kecil — lihat tab Uji Historis untuk gambaran besar.</i>"]
+    lines += _track_lines(track)
+    lines += ["", "<i>Tanpa biaya transaksi. Sampel mingguan kecil — lihat Histori Prediksi untuk gambaran besar.</i>"]
     return "\n".join(lines)
 
 

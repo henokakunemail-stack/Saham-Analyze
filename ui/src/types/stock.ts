@@ -337,6 +337,41 @@ export interface ScreenerItem {
   abnormal_recent?: AbnormalDay[];
   sector?: string | null;
   sector_rank?: number | null;
+  /** When the engine stored this row (latest scan) */
+  updated_at?: string;
+  /** Bagian 5: sessions the last close is behind the index (null = not checked) */
+  data_lag?: DataLag | null;
+  /** 0-100 from the price-data cleaning report */
+  data_quality_score?: number | null;
+}
+
+export interface DataLag {
+  days: number;
+  last_bar: string;
+  expected: string;
+}
+
+/** /api/data/health: the latest scan's data health. */
+export interface DataHealth {
+  market: 'IDX' | 'US';
+  available?: boolean;
+  rebuilt?: boolean;
+  scanned_at?: string;
+  source?: string;
+  expected_session?: string | null;
+  asked?: number;
+  analysed?: number;
+  fresh?: number;
+  unknown?: number;
+  stale?: { ticker: string; days: number; last_bar: string }[];
+  stale_count?: number;
+  failed?: string[];
+  failed_count?: number;
+  low_quality?: { ticker: string; score: number; issues: string[] }[];
+  low_quality_count?: number;
+  issues_by_type?: Record<string, number>;
+  ok?: boolean;
+  text?: string;
 }
 
 export interface CandlePoint {
@@ -449,6 +484,7 @@ export interface StockAnalysis {
   financials?: FinancialHealth;
   broker_summary?: BrokerSummaryData;
   news: NewsItem[];
+  data_lag?: DataLag | null;
   data_quality?: DataQualityReport | null;
 }
 
@@ -699,6 +735,35 @@ export interface PlanAssessment {
   risk_pct?: number;
   reward_pct?: number;
   rr?: number | null;
+}
+
+export type TrackVerdictCode = 'BELUM_CUKUP' | 'MERUGI' | 'DI_BAWAH_HARAPAN' | 'TERBUKTI_POSITIF' | 'SESUAI_BELUM_PASTI';
+
+/** Live results of the current rules vs the backtest (/api/predictions/track-record). */
+export interface TrackRecord {
+  market: 'IDX' | 'US';
+  rules_version: string;
+  since: string | null;
+  predictions: number;
+  filled: number;
+  closed: number;
+  in_progress: number;
+  waiting: number;
+  not_filled: number;
+  win_pct: number | null;
+  profit_factor: number | null;
+  older_rules_predictions: number;
+  verdict: {
+    code: TrackVerdictCode;
+    label: string;
+    text: string;
+    n: number;
+    mean_r: number | null;
+    ci90: [number, number] | null;
+    expected_r: number;
+    min_trades: number;
+  };
+  trades: { ticker: string; date: string; status: string; r: number | null }[];
 }
 
 export interface ClosingReviewRow {

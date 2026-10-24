@@ -111,6 +111,31 @@ def staleness_trading_days(ticker: str, last_bar_date: Optional[str], now: Optio
     return trading_days_between(last, last_closed_session(ticker, now).date())
 
 
+def _final_dates(frame: pd.DataFrame, market: str, now: Optional[datetime]) -> List[date]:
+    try:
+        dates = pd.to_datetime(frame["date"].tail(80), errors="coerce").dropna().dt.date
+    except (KeyError, TypeError, ValueError):
+        return []
+    cutoff = _last_closed(EXCHANGES.get(market, EXCHANGES["IDX"]), now).date()
+    return [d for d in dates if d <= cutoff]
+
+
+def lag_vs_reference(df: Optional[pd.DataFrame], ref_df: Optional[pd.DataFrame], market: str = "IDX",
+                     now: Optional[datetime] = None) -> Optional[Dict[str, Any]]:
+    """How many sessions the stock's last final bar is behind the market index's last final bar.
+
+    Counting the index's own bars (not weekdays) makes exchange holidays count as 0. None when
+    either series is missing. A stock ahead of the index (stale index cache) counts as 0.
+    """
+    if df is None or ref_df is None or df.empty or ref_df.empty:
+        return None
+    mine, ref = _final_dates(df, market, now), _final_dates(ref_df, market, now)
+    if not mine or not ref:
+        return None
+    last, expected = max(mine), max(ref)
+    return {"days": len({d for d in ref if d > last}), "last_bar": last.isoformat(), "expected": expected.isoformat()}
+
+
 # ---------------------------------------------------------------------------
 # Cleaning
 # ---------------------------------------------------------------------------

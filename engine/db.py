@@ -227,6 +227,9 @@ def _init_db_locked():
             ("debt_to_equity", "REAL DEFAULT 0.0"),
             ("pe", "REAL DEFAULT 0.0"),
             ("pbv", "REAL DEFAULT 0.0"),
+            # Which status/level rules produced the prediction (screener.actionability.RULES_VERSION);
+            # '' = recorded before versions existed
+            ("rules_version", "TEXT DEFAULT ''"),
         ]
         for col_name, col_def in pred_migration_cols:
             if col_name not in existing_pred_cols:
@@ -482,7 +485,9 @@ DIRECTION_KEYS = ("direction", "direction_label", "trend_regime", "trend_confide
                   # shown as badges in the screener/Top 10 (were lost when rows came from the cache)
                   "vsa_signal", "vsa_label", "vsa_desc", "spread_ratio", "confluence_gates",
                   # +1 / -1 / 0 per entry of `reasons` (supporting / against / note)
-                  "reason_signs")
+                  "reason_signs",
+                  # sessions the last close is behind the index (fresh-data gate)
+                  "data_lag", "data_quality_score")
 
 def save_screener_result(res: Dict[str, Any]):
     with get_connection() as conn:
@@ -683,7 +688,8 @@ def get_watchlist() -> List[Dict[str, Any]]:
         cursor.execute("SELECT * FROM watchlist ORDER BY added_at DESC")
         return [dict(r) for r in cursor.fetchall()]
 
-def save_prediction_snapshot(items: List[Dict[str, Any]], market: str = "IDX", snapshot_date: Optional[str] = None):
+def save_prediction_snapshot(items: List[Dict[str, Any]], market: str = "IDX", snapshot_date: Optional[str] = None,
+                             rules_version: str = ""):
     """Replace the day's snapshot (max 10 rows) for historical performance tracking.
 
     The snapshot of a date is the latest scan's view of that date: rows from earlier scans
@@ -709,8 +715,8 @@ def save_prediction_snapshot(items: List[Dict[str, Any]], market: str = "IDX", s
                     price_at_prediction, recommended_entry, target_tp1, target_tp2,
                     stop_loss, risk_reward_ratio, confluence_score, money_flow_status,
                     reasons, created_at, entry_low, entry_high, atr14, health_grade,
-                    health_score, is_speculative, roe, net_margin, debt_to_equity, pe, pbv
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    health_score, is_speculative, roe, net_margin, debt_to_equity, pe, pbv, rules_version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(snapshot_date, market, ticker) DO UPDATE SET
                     rank=excluded.rank,
                     score=excluded.score,
@@ -736,7 +742,8 @@ def save_prediction_snapshot(items: List[Dict[str, Any]], market: str = "IDX", s
                     net_margin=excluded.net_margin,
                     debt_to_equity=excluded.debt_to_equity,
                     pe=excluded.pe,
-                    pbv=excluded.pbv
+                    pbv=excluded.pbv,
+                    rules_version=excluded.rules_version
             """, (
                 target_date,
                 market,
@@ -765,7 +772,8 @@ def save_prediction_snapshot(items: List[Dict[str, Any]], market: str = "IDX", s
                 float(item.get("net_margin", 0.0)),
                 float(item.get("debt_to_equity", 0.0)),
                 float(item.get("pe", 0.0)),
-                float(item.get("pbv", 0.0))
+                float(item.get("pbv", 0.0)),
+                rules_version,
             ))
         conn.commit()
 

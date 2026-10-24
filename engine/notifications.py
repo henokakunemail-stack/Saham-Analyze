@@ -34,6 +34,7 @@ KINDS: Dict[str, str] = {
     "target_hit": "Watchlist capai Target TP1",
     "outflow": "Watchlist: uang keluar masif",
     "entry_zone": "Harga masuk zona beli",
+    "track_record": "Rekam jejak nyata memburuk",
 }
 # Off unless the user turns them on: they fire for every scanned stock, and a fresh breakout /
 # verdict upgrade is a chase signal the pullback strategy does not act on (54 breakout alerts in
@@ -317,6 +318,32 @@ def _store_alerts(market: str, alerts: List[Dict[str, Any]], now: datetime) -> L
         )
         conn.commit()
     return stored
+
+
+TRACK_KEY = "track_verdict_{}"
+BAD_VERDICTS = ("MERUGI", "DI_BAWAH_HARAPAN")
+
+
+def on_track_record(market: str, verdict: Dict[str, Any], now: Optional[datetime] = None) -> Optional[Dict[str, Any]]:
+    """Alert once when the live track record turns bad (MERUGI / DI_BAWAH_HARAPAN); remembers the
+    last verdict so the same state never alerts twice. Returns the stored alert, if any. Never raises."""
+    try:
+        _ensure_tables()
+        code = verdict.get("code")
+        key = TRACK_KEY.format(market)
+        prev = get_setting(key, "")
+        if code == prev:
+            return None
+        set_setting(key, code or "")
+        if code not in BAD_VERDICTS:
+            return None
+        alert = {"ticker": f"REKAM-{market}", "kind": "track_record",
+                 "title": f"Rekam jejak nyata {market}: {verdict.get('label')}", "message": verdict.get("text", "")}
+        stored = _store_alerts(market, [alert], now or datetime.now())
+        return stored[0] if stored else None
+    except Exception as e:
+        print(f"[Alerts] track record: {e}")
+        return None
 
 
 def _watchlist_set(market: str) -> set:
