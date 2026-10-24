@@ -194,8 +194,10 @@ export const ClosingReview: React.FC<{
             <span className="text-gray-200">{fmtR(hist.HINDARI.avg_r)}</span>
             <InfoTip label="Tentang angka historis">
               <p className="text-xs leading-relaxed">
-                Uji historis periode Des 2025–Okt 2026, sebelum biaya transaksi. Biaya beli+jual (±0,4%) setara ±0,1 R, jadi
-                rencana LAYAK pun kira-kira impas setelah biaya. R = besar risiko per transaksi (harga beli − cut loss).
+                Uji historis periode Des 2025–Okt 2026 dengan aturan sekarang (termasuk syarat untung ke TP1 ≥ 1,2× risiko),
+                sebelum biaya transaksi (±0,4% beli+jual ≈ 0,1 R). Angka LAYAK berasal dari hanya 37 transaksi — belum
+                cukup untuk dipastikan; rekam jejak nyata di Histori Prediksi yang menentukan. R = besar risiko per
+                transaksi (harga beli − cut loss).
               </p>
             </InfoTip>
           </p>

@@ -34,7 +34,7 @@ def test_all_gates_pass_is_layak():
     out = assess(make_row())
     assert out["status"] == "LAYAK"
     assert out["reasons"] == []
-    assert set(out["gates"]) == {"market_ok", "signal_ok", "risk_ok", "vol_ok", "liquid_ok", "data_ok"}
+    assert set(out["gates"]) == {"market_ok", "signal_ok", "risk_ok", "room_ok", "vol_ok", "liquid_ok", "data_ok"}
     assert all(out["gates"].values())
 
 
@@ -184,13 +184,14 @@ def test_plan_whose_target_is_already_hit_today_waits():
     assert assess(with_levels(frozen=True, live={"status": "IN_ZONE", "price": 1}))["status"] == "LAYAK"
 
 
-def test_min_rr_gate_is_off_by_default_and_blocks_tight_room_when_set():
+def test_min_rr_gate_blocks_tight_room():
     from engine.screener.actionability import assess, default_config
     row = {"market": "IDX", "verdict": "MILD_BULLISH", "market_mode": "NORMAL", "score": 70,
            "levels": {"risk_pct": 4.0, "risk_reward_ratio": 0.8, "flags": []},
            "screen": {"avg_value_20d": 5e9}}
-    assert default_config()["min_rr"] == 0 and assess(row)["status"] == "LAYAK"
-    out = assess(row, {**default_config(), "min_rr": 1.2})
+    assert default_config()["min_rr"] == 1.2
+    assert assess(row, {**default_config(), "min_rr": 0})["status"] == "LAYAK"     # switch off = old rule
+    out = assess(row)
     assert out["status"] == "TUNGGU" and out["gates"]["room_ok"] is False
     assert any("Ruang ke TP1 sempit" in r for r in out["reasons"])
     row["levels"]["risk_reward_ratio"] = 1.3

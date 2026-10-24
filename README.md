@@ -27,7 +27,7 @@ Kebanyakan screener hanya memberi daftar saham "bagus". SAHAM menjawab pertanyaa
 | Beli di harga berapa? | **Zona beli + harga saran (limit)** di support nyata (swing low, EMA20/50, low 20/60 hari), sudah dibulatkan ke fraksi harga BEI |
 | Salah di mana? | **Cut loss** di bawah support struktural, risiko dibatasi maks 8 % |
 | Jual di mana? | **TP1 = resistance terdekat**, TP2 = resistance berikutnya — tidak digelembungkan demi R:R yang cantik |
-| Boleh dieksekusi sekarang? | **LAYAK / TUNGGU / HINDARI** — syarat risiko ≤ 6 %, likuiditas ≥ Rp2 M/hari, tidak terlalu volatil, pasar tidak krisis, tanpa ARA/ARB baru |
+| Boleh dieksekusi sekarang? | **LAYAK / TUNGGU / HINDARI** — syarat risiko ≤ 6 %, untung ke TP1 ≥ 1,2× risiko, likuiditas ≥ Rp2 M/hari, tidak terlalu volatil, pasar tidak krisis, tanpa ARA/ARB baru |
 | Rencana kemarin masih berlaku pagi ini? | Rencana **dikunci selama sesi**; harga live dibandingkan dengan rencana: *di zona beli*, *jangan dikejar*, *sudah di TP1*, *rencana batal* |
 | Apakah metodenya terbukti? | **Backtest walk-forward** 126 saham IDX, 2024–2026, hasilnya dipublikasikan apa adanya di [docs/](docs/hasil-akhir-fase1-5.md) |
 
@@ -52,14 +52,17 @@ Kebanyakan screener hanya memberi daftar saham "bagus". SAHAM menjawab pertanyaa
 
 Backtest walk-forward 126 saham IDX, 29 Apr 2024 – 9 Okt 2026, 23.923 rencana, evaluasi tiap 3 hari bursa, batas 10 hari, order beli limit di harga saran, **tanpa biaya transaksi**. Dipilih di periode awal (< 11 Des 2025), diuji sekali di periode uji (≥ 11 Des 2025):
 
-| Status | Periode uji: rencana / terisi | Rata-rata R | Profit factor |
-|---|---|---|---|
-| **LAYAK** | 253 / 182 | **+0,116 R** | 1,29 |
-| TUNGGU | 3.408 / 2.521 | −0,052 R | 0,88 |
-| HINDARI | 4.464 / 2.991 | −0,115 R | 0,76 |
+| Status | Periode awal: rencana / R | Periode uji: rencana / terisi | Periode uji: R | Profit factor |
+|---|---|---|---|---|
+| **LAYAK** | 215 / +0,287 R | 53 / 37 | **+0,615 R** | 2,53 |
+| TUNGGU | — | 3.608 / 2.666 | −0,050 R | 0,89 |
+| HINDARI | — | 4.464 / 2.991 | −0,115 R | 0,76 |
 
 - Urutan LAYAK > TUNGGU > HINDARI terjaga di kedua periode → status ini **membantu menghindari rencana yang buruk**.
-- Biaya transaksi (±0,4 % beli+jual) setara ±0,10 R → **setelah biaya praktis impas**. Belum ada bukti untung bersih — karena itu aplikasi menyebut angkanya apa adanya, bukan "akurasi 99 %".
+- Syarat terkuat yang ditemukan: **untung ke TP1 minimal 1,2× risiko** (dipakai sejak 24 Okt 2026). Tanpa syarat ini LAYAK
+  hanya +0,06 / +0,12 R — praktis impas setelah biaya (±0,4 % beli+jual ≈ 0,1 R).
+- **Sampel masih kecil** (37 transaksi LAYAK terisi di periode uji, sedangkan aturan kami sendiri meminta ≥ 100), jadi angka
+  ini belum bukti final. Aplikasi menyebut angkanya apa adanya, bukan "akurasi 99 %"; rekam jejak nyata yang menentukan.
 - Simulator rencana memakai aturan keluar: jual separuh di TP1, cut loss sisa dinaikkan ke harga beli, sisanya incar TP2.
 - Detail metode, kandidat yang **ditolak** (termasuk tweak level yang "terlihat masuk akal" tetapi lebih buruk), dan cara reproduksi: [docs/hasil-akhir-fase1-5.md](docs/hasil-akhir-fase1-5.md), [docs/hasil-backtest-baseline.md](docs/hasil-backtest-baseline.md), [docs/hasil-kalibrasi-fase1.md](docs/hasil-kalibrasi-fase1.md).
 

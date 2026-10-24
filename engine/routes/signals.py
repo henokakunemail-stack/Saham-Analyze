@@ -1,4 +1,4 @@
-"""Signal-trust API: backtest of the scoring model and prediction history."""
+﻿"""Signal-trust API: backtest of the scoring model and prediction history."""
 import json
 import math
 import threading
@@ -25,7 +25,7 @@ class PredictionBackfillRequest(BaseModel):
 BACKTEST_TTL = 6 * 3600
 # Bumped when the stored result gains new sections (2 = trade-plan simulation); older results
 # are recomputed once instead of being served until the TTL runs out
-BACKTEST_VERSION = 4  # 4: plan_sim sells half at TP1, rest to TP2 with a breakeven stop
+BACKTEST_VERSION = 5  # 5: LAYAK needs reward/risk to TP1 >= 1.2 (4: half at TP1, breakeven stop)
 BACKTEST_ERROR_RETRY = 5 * 60
 IC_MIN = 0.03     # |IC| below this is treated as no usable edge
 T_STAT_MIN = 2.0  # roughly 95% confidence that the mean IC is not zero

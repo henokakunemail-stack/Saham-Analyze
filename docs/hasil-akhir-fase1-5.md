@@ -17,7 +17,7 @@ python -m engine.screener.calibration report rows.pkl report.json  # pilih di pe
 | Kandidat | LAYAK periode awal | LAYAK periode uji | Keputusan |
 |---|---|---|---|
 | Sekarang | 848 rencana, +0,064 R | 253, +0,116 R | — |
-| **Syarat Rugi:Untung ≥ 1 : 1,2** | **215, +0,287 R** (PF 1,60) | **53, +0,615 R** (PF 2,53) | **menunggu keputusan pengguna** — terbaik di periode awal dan dikonfirmasi periode uji, tetapi hanya 37 rencana terisi di periode uji (syarat kita ≥ 100). Tersedia sebagai `actionability.MIN_RR`, saat ini 0 (mati). |
+| **Syarat Rugi:Untung ≥ 1 : 1,2** | **215, +0,287 R** (PF 1,60) | **53, +0,615 R** (PF 2,53) | **dipakai sejak 24 Okt 2026 atas keputusan pengguna** — terbaik di periode awal dan dikonfirmasi periode uji, tetapi hanya 37 rencana terisi di periode uji (syarat kita ≥ 100). `actionability.MIN_RR = 1.2`; dipantau di rekam jejak nyata. |
 | Rugi:Untung ≥ 1 : 1,0 | 318, +0,207 R | 80, +0,469 R | (pembanding) |
 | Zona breakout minimum 0,25 ATR | 848, +0,067 R | 253, +0,105 R | tidak dipakai (lebih buruk di periode uji) |
 | Zona breakout minimum 0,5 ATR | 849, +0,075 R | 257, +0,074 R | tidak dipakai (lebih buruk di periode uji) |

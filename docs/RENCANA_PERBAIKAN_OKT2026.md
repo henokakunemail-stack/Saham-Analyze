@@ -136,7 +136,7 @@ Semua lewat `engine/screener/calibration.py` (pilih di periode awal, uji sekali)
 | 0 Analisa Penutupan | ✅ selesai — peluang terisi dihitung dari jarak ke harga beli (tabel diperbarui) |
 | 1 Candlestick | ✅ deteksi diperbaiki, diuji: tidak ada pola yang konsisten di IDX; candle tetap di skor (mencabutnya memperburuk); setiap pola menampilkan rekam jejaknya — `docs/hasil-uji-candlestick.md` |
 | 2 Laporan keuangan | ✅ bagian "Laporan keuangan" di detail saham (mata uang laporan, bank dikecualikan dari utang, valuasi vs sektor); bendera merah tidak dipakai sebagai syarat — `docs/hasil-uji-fundamental.md`. Ditemukan & diperbaiki: PBV mustahil di 38 dari 200 saham (emiten berlaporan USD) yang membuat penilaian kesehatan keliru |
-| 3 Aturan level & syarat | ✅ zona breakout & level "bersih" ditolak; **syarat Rugi:Untung ≥ 1:1,2 menunggu keputusan pengguna** (kuat di kedua periode, sampel periode uji 37 transaksi) |
+| 3 Aturan level & syarat | ✅ zona breakout & level "bersih" ditolak; **syarat Rugi:Untung ≥ 1:1,2 dipakai** (keputusan pengguna 24 Okt; kuat di kedua periode, sampel periode uji 37 transaksi — dipantau di Bagian 4) |
 | 4 Rekam jejak nyata | berikutnya |
 | 5 Kesehatan data Yahoo | berikutnya |
 

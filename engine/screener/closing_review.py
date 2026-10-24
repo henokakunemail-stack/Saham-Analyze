@@ -16,10 +16,11 @@ from typing import Any, Dict, List, Optional
 # 0.5–0.75 62.3/63.6 %, 0.75–1 49.8/48.8 %, 1–1.5 34.4/30.4 %, > 1.5 only 441 plans (≈ 30 %).
 FILL_BY_DISTANCE = ((0.25, 84), (0.5, 77), (0.75, 63), (1.0, 50), (1.5, 33), (float("inf"), 30))
 
-# Average outcome per status in the test period (Dec 2025 – Oct 2026), before fees.
+# Average outcome per status in the test period (Dec 2025 – Oct 2026), before fees, with the
+# current rules (incl. Rugi : Untung ≥ 1 : 1,2 since 24 Oct 2026). LAYAK rests on 37 filled trades.
 STATUS_HISTORY = {
-    "LAYAK": {"avg_r": 0.116, "plans": 253, "filled": 182},
-    "TUNGGU": {"avg_r": -0.052, "plans": 3408, "filled": 2521},
+    "LAYAK": {"avg_r": 0.615, "plans": 53, "filled": 37},
+    "TUNGGU": {"avg_r": -0.050, "plans": 3608, "filled": 2666},
     "HINDARI": {"avg_r": -0.115, "plans": 4464, "filled": 2991},
 }
 

@@ -488,9 +488,9 @@ const ENTRIES: GlossaryEntry[] = [
     key: 'action_status',
     term: 'Status LAYAK / TUNGGU / HINDARI',
     category: 'Rencana Trading',
-    what: 'Keputusan eksekusi: LAYAK bila semua syarat lolos (vonis beli, risiko ≤ 6%, likuid ≥ Rp2 M/hari, tidak terlalu volatil, pasar tidak krisis, tanpa ARB/suspensi baru).',
+    what: 'Keputusan eksekusi: LAYAK bila semua syarat lolos (vonis beli, risiko ≤ 6%, untung ke TP1 ≥ 1,2× risiko, likuid ≥ Rp2 M/hari, tidak terlalu volatil, pasar tidak krisis, tanpa ARB/suspensi baru).',
     read: 'LAYAK = boleh pasang order beli limit sesuai rencana. TUNGGU = pantau dulu, ada syarat yang belum lolos. HINDARI = jangan beli.',
-    caution: 'Dari uji historis 2024–2026: LAYAK rata-rata sedikit lebih baik dari TUNGGU dan HINDARI, tetapi setelah biaya transaksi kira-kira impas. Bukan jaminan untung.',
+    caution: 'Uji historis 2024–2026: LAYAK jauh lebih baik dari TUNGGU dan HINDARI sejak syarat ruang untung dipakai, tetapi baru dari sedikit transaksi (37 di periode uji). Bukan jaminan untung — pantau rekam jejak nyata.',
     aliases: ['layak', 'tunggu', 'hindari', 'status'],
   }),
   E({

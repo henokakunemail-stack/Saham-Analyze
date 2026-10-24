@@ -47,7 +47,7 @@ def test_build_keeps_top10_order_and_adds_recap_and_watchlist():
     assert out["rows"][0]["recap"]["outcome"] == "ABOVE" and out["rows"][0]["in_top"]
     assert out["rows"][10]["plan"] is None and out["rows"][10]["recap"]["outcome"] == "TP1"
     assert out["rows"][11]["watchlist"] and not out["rows"][11]["in_top"]
-    assert out["plan_as_of"] == "2026-10-23" and out["status_history"]["LAYAK"]["avg_r"] == 0.116
+    assert out["plan_as_of"] == "2026-10-23" and out["status_history"]["LAYAK"]["avg_r"] == 0.615
 
 
 def test_recap_ignores_a_bar_that_is_still_trading():

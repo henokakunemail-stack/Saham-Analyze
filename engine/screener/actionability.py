@@ -37,9 +37,11 @@ REQUIRE_NOT_VOLATILE = True
 # IDX calibrated (Rp2 M won in-sample, Rp5 M was within 0.003 R); US not calibrated (no US run)
 MIN_VALUE_IDX = 2e9
 MIN_VALUE_US = 20e6
-# Minimum reward/risk to TP1 (Rugi : Untung). 0 = no condition. Candidate 1.2 = the existing
-# "tight_room" line; under test in docs/hasil-akhir-fase1-5.md
-MIN_RR = 0.0
+# Minimum reward/risk to TP1 (Rugi : Untung); 1.2 = the existing "tight_room" line. Adopted 24 Oct
+# 2026 by the owner's decision: LAYAK +0.064 → +0.287 R in-sample, +0.116 → +0.615 R out-of-sample,
+# but only 37 filled out-of-sample trades (our rule asks 100) — watch the live track record
+# (docs/hasil-akhir-fase1-5.md). 0 switches the condition off.
+MIN_RR = 1.2
 # Abnormal bars that make the last prices unreliable for a fresh entry
 DATA_BLOCK_KINDS: Tuple[str, ...] = ("LOCK_DOWN", "LIMIT_DOWN", "SUSPENSION_GAP")
 # How many recent trading days an abnormal bar keeps blocking (and a LOCK_DOWN forces HINDARI)

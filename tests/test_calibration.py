@@ -15,7 +15,7 @@ def row(date, ticker, verdict="MILD_BULLISH", mode="NORMAL", r=0.5, filled=True,
         risk=5.0, value=10e9, flags="", pv=None, score=70, raw=70, state="PULLBACK_IDEAL"):
     return {"ticker": ticker, "date": pd.Timestamp(date), "score": score, "raw_score": raw,
             "pillar_values": pv or PV_GOOD, "pullback_state": state, "market_mode": mode, "verdict": verdict,
-            "rr": 1.0, "risk_pct": risk, "atr_pct": 3.0, "avg_value_20d": value, "rs_60d": 5.0, "flags": flags,
+            "rr": 1.5, "risk_pct": risk, "atr_pct": 3.0, "avg_value_20d": value, "rs_60d": 5.0, "flags": flags,
             "plan_status": status if filled or status in ("NOT_FILLED", "CANCELLED") else "NOT_FILLED",
             "filled": filled, "r": r if filled else None, "plan_return_pct": r * 4 if filled else None,
             "bars_held": 3 if filled else None}
